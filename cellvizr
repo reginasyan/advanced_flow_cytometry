@@ -1,0 +1,46 @@
+install.packages("Rtsne")
+install.packages("uwot")
+# Install flowCore
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("flowCore")
+# Install CellVizR
+install.packages("devtools")
+library("devtools")
+install_github("tchitchek-lab/CellVizR")
+library(CellVizR)
+# Read the vignette
+library(flowCore)
+browseVignettes("flowCore")
+
+
+setwd("~/advanced_cytometry")
+
+files <- list.files("./02_data/01_fcs/", 
+                    pattern = "fcs",
+                    full.names = TRUE)
+
+# import the FCS files into a Celldata object 
+DataCell <- import(files, 
+                   filetype = "fcs", 
+                   transform = "arcsinh",
+                   exclude.markers = c("Cell_length","Dead","Beads","Cells"),
+                   d.method = "uniform",
+                   parameters.method = list("target.percent" = 0.1))
+
+
+# Retrieving of the marker names
+QCN <- QCMarkerNames(files)
+
+
+
+
+plot = QCMarkerRanges(files)
+
+plot <- ggiraph::girafe(ggobj = plot,
+                        options = list(ggiraph::opts_sizing(width = .9),
+                                       ggiraph::opts_hover_inv(css = "opacity:0.6;"),
+                                       ggiraph::opts_hover(css = "fill:black;")))
+
+plot
+DataCell@raw.markers
