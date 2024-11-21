@@ -37,3 +37,14 @@ ggplot(elbow_plot, aes(x = Clusters, y = WSS)) +
   ggtitle("Elbow Method for Optimal Clusters") +
   xlab("Number of Clusters") +
   ylab("Within-Cluster Sum of Squares")
+
+#flowSOM
+DataCell <- identifyClusters(DataCell,
+                             space = "manifold",
+                             markers = markers_of_interest,
+                             method = "FlowSOM",
+                             nclus = k,
+                             xdim = 20,
+                             ydim = 20
+                             )
+
