@@ -1,0 +1,21 @@
+library(devtools)
+library(spade)
+library("CellVizR")
+
+setwd("~/advanced_cytometry")
+files <- list.files("./01_fcs", 
+                    pattern = "fcs", full.names = TRUE)
+
+DataCell <- import(files, 
+                   filetype = "fcs", 
+                   transform = "logicle", 
+                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","CD45RA","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"), 
+                   d.method = "uniform",
+                   parameters.method = list("target.percent" = 0.1))
+
+SPADE.driver(files, 
+             file_pattern = ".fcs",
+             out_dir = "./05_spade", 
+             cluster_cols = clustering_markers,
+             )
+
