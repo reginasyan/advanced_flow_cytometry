@@ -141,3 +141,22 @@ for (sample in unique(DataCell@metadata$condition)){
     ggplot2::guides(color = "none")
 }
 dev.off()
+
+
+#Volcanoplot
+
+samples_baseline = selectSamples(DataCell, condition = "BPD19")
+samples_PPD03 = selectSamples(DataCell, condition = "PPD03" )
+
+DataCell <- computeStatistics(DataCell, 
+                              condition = samples_PP, 
+                              ref.condition = samples_baseline,
+                              comparison = "samples_PPD03 vs. samples_baseline", 
+                              test.statistics = "t.test",
+                              paired = FALSE)
+
+plotVolcano(DataCell,
+            comparison = ("samples_PPD03 vs. samples_baseline"),
+            th.pv = 1.3,
+            th.fc = 1.5,
+            plot.text = TRUE)
