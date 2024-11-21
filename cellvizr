@@ -54,16 +54,33 @@ rownames(metadata) <- paste(metadata$condition, metadata$individual, sep = "_")
 DataCell <- assignMetadata(DataCell, metadata = metadata)
 
 
-#UMAP algorithm
-DataCell <- generateManifold(DataCell, 
-                             method = "UMAP")
+# Perform Manifold from the "Celldata" object
+DataCell <- generateManifold(DataCell,
+                             method = "UMAP", 
+                             n_neighbors = 15,
+                             n_components = 2,
+                             metric = "euclidean",
+                             n_epochs = NULL,
+                             n_threads = 1, 
+                             n_sgd_threads = 1,
+                             scale = FALSE)
 
-#Clusters
+#K-means
 DataCell <- identifyClusters(DataCell, 
                              space = "manifold", 
                              method = "kmeans", 
-                             centers = 300, 
+                             centers = 100, 
                              nstart = 3)
+
+#flowSOM
+markers <- colnames(DataCell@matrix.expression)
+DataCell <- identifyClusters(DataCell,
+                             space = "markers",
+                             markers = markers,
+                             method = "FlowSOM",
+                             nClus = 100,
+                             xdim = 20,
+                             ydim = 20)
 
 plotClustersCounts(DataCell, 
                    clusters = NULL,
@@ -103,11 +120,3 @@ plot(hm.exp)
 #Marker density
 plotMarkerDensity(DataCell, 
                   clusters = "58")
-
-
-#FlowSOM
-DataCell <- identifyClusters(DataCell, 
-                             space = "manifold", 
-                             method = "FlowSOM")
-
-markers_of_interest = c("CD3", "CD127", "CD45RA","CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67")
