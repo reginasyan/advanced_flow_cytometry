@@ -19,3 +19,21 @@ SPADE.driver(files,
              cluster_cols = clustering_markers,
              )
 
+# set of marker to use
+clustering_markers <- c(
+"(Pr141)Di",
+"(Nd142)Di",
+"(Nd143)Di",
+"(Nd145)Di",
+"(Nd148)Di",
+"(Sm149)Di",
+"(Eu151)Di",
+"(Eu153)Di",
+"(Gd158)Di",
+"(Tb159)Di",
+"(Gd160)Di",
+"(Dy162)Di",
+"(Er167)Di",
+"(Tm169)Di",
+"(Yb171)Di")
+	
