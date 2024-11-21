@@ -1,1 +1,39 @@
+library(cluster) # For silhouette calculation
+library(ggplot2) # For plotting the elbow plot
 
+# Function to compute within-cluster sum of squares (WSS) for the elbow method
+computeWSS <- function(data, max_clusters) {
+  wss <- numeric(max_clusters)
+  for (k in 1:max_clusters) {
+    set.seed(123) # For reproducibility
+    km <- kmeans(data, centers = k, nstart = 10)
+    wss[k] <- km$tot.withinss
+  }
+  return(wss)
+}
+
+# Function to compute average silhouette width for different cluster numbers
+computeSilhouette <- function(data, max_clusters) {
+  avg_sil <- numeric(max_clusters)
+  for (k in 2:max_clusters) { # Silhouette doesn't work for k=1
+    set.seed(123)
+    km <- kmeans(data, centers = k, nstart = 10)
+    sil <- silhouette(km$cluster, dist(data))
+    avg_sil[k] <- mean(sil[, 3]) # Extract mean silhouette width
+  }
+  return(avg_sil)
+}
+
+# Prepare data for clustering
+manifold_data <- DataCell@manifold # Extract the UMAP coordinates or manifold space
+max_clusters <- 20 # Define maximum number of clusters to test
+
+# Elbow Method
+wss <- computeWSS(manifold_data, max_clusters)
+elbow_plot <- data.frame(Clusters = 1:max_clusters, WSS = wss)
+ggplot(elbow_plot, aes(x = Clusters, y = WSS)) +
+  geom_line() +
+  geom_point() +
+  ggtitle("Elbow Method for Optimal Clusters") +
+  xlab("Number of Clusters") +
+  ylab("Within-Cluster Sum of Squares")
