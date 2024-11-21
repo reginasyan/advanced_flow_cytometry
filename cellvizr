@@ -43,26 +43,12 @@ plot <- ggiraph::girafe(ggobj = plot,
                                        ggiraph::opts_hover(css = "fill:black;")))
 
 plot
-DataCell@raw.markers
-
 
 #Metadata
 metadata <- data.frame(individual = gsub("\\.fcs", "", basename(files)))
 metadata$condition <- sapply(strsplit(metadata$individual, "_"), function(x) x[1])
 metadata$individual <- sapply(strsplit(metadata$individual, "_"), function(x) x[2])
 rownames(metadata) <- paste(metadata$condition, metadata$individual, sep = "_")
-DataCell <- assignMetadata(DataCell, metadata = metadata)
-
-#Metadata with timepoint
-metadata <- data.frame(individual = gsub("\\.fcs", "", basename(files)))
-metadata$condition <- sapply(strsplit(metadata$individual, "_"), function(x) x[1])
-metadata$parsed_individual <- sapply(strsplit(metadata$individual, "_"), function(x) ifelse(length(x) >= 2, x[2], NA))
-metadata$timepoint <- sapply(strsplit(metadata$individual, "_"), function(x) ifelse(length(x) >= 3, x[3], NA))
-metadata$parsed_individual[is.na(metadata$parsed_individual)] <- "Unknown"
-metadata$timepoint[is.na(metadata$timepoint)] <- "Unknown"
-metadata$individual <- metadata$parsed_individual
-rownames(metadata) <- rownames(DataCell@metadata)  # Ensure consistency with DataCell
-metadata <- metadata[, c("condition", "individual", "timepoint")]
 DataCell <- assignMetadata(DataCell, metadata = metadata)
 
 
@@ -118,32 +104,17 @@ plotManifold(DataCell,
 
 #3_Heatmap
 hm.exp <- plotHmExpressions(DataCell, 
-                            metaclusters = 9)
+                            metaclusters = 10)
 gridExtra::grid.arrange(hm.exp)
 plot(hm.exp)
 
 #Heatmap with MOI
 hm.exp <- plotHmExpressions(DataCell, 
                             markers = c("CD3", "CD127", "CD45RA", "CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67"),
-                            metaclusters = 9)
+                            metaclusters = 10)
 gridExtra::grid.arrange(hm.exp)
 plot(hm.exp)
 
-#Marker density
-plotMarkerDensity(DataCell, 
-                  clusters = "58")
-
-
-#loop for creating UMAP for all conditions
-pdf("./03_figures/umap_all_samples_plot.pdf", height = 8,width = 8)
-for (sample in unique(DataCell@metadata$condition)){
-  plotManifold(DataCell, sample = sample, markers = "clusters")+ 
-    ggplot2::guides(color = "none")
-}
-dev.off()
-
-
-#Volcanoplot
 
 #Volcanoplot
 
