@@ -53,6 +53,18 @@ metadata$individual <- sapply(strsplit(metadata$individual, "_"), function(x) x[
 rownames(metadata) <- paste(metadata$condition, metadata$individual, sep = "_")
 DataCell <- assignMetadata(DataCell, metadata = metadata)
 
+#Metadata with timepoint
+metadata <- data.frame(individual = gsub("\\.fcs", "", basename(files)))
+metadata$condition <- sapply(strsplit(metadata$individual, "_"), function(x) x[1])
+metadata$parsed_individual <- sapply(strsplit(metadata$individual, "_"), function(x) ifelse(length(x) >= 2, x[2], NA))
+metadata$timepoint <- sapply(strsplit(metadata$individual, "_"), function(x) ifelse(length(x) >= 3, x[3], NA))
+metadata$parsed_individual[is.na(metadata$parsed_individual)] <- "Unknown"
+metadata$timepoint[is.na(metadata$timepoint)] <- "Unknown"
+metadata$individual <- metadata$parsed_individual
+rownames(metadata) <- rownames(DataCell@metadata)  # Ensure consistency with DataCell
+metadata <- metadata[, c("condition", "individual", "timepoint")]
+DataCell <- assignMetadata(DataCell, metadata = metadata)
+
 
 # Perform Manifold from the "Celldata" object
 DataCell <- generateManifold(DataCell,
