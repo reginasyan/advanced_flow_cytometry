@@ -24,7 +24,7 @@ files <- list.files("./02_data/01_fcs/",
 DataCell <- import(files, 
                    filetype = "fcs", 
                    transform = "arcsinh",
-                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","CD45RA","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"),
+                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"),
                    d.method = "uniform",
                    parameters.method = list("target.percent" = 0.1))
 
