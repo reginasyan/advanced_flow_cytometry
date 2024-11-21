@@ -109,3 +109,5 @@ plotMarkerDensity(DataCell,
 DataCell <- identifyClusters(DataCell, 
                              space = "manifold", 
                              method = "FlowSOM")
+
+markers_of_interest = c("CD3", "CD127", "CD45RA","CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67")
