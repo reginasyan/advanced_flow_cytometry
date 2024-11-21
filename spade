@@ -55,3 +55,24 @@ SPADE.plot.trees(graph,
 )
 
 results <- importResultsFromSPADE("./05_spade/")
+
+samples = colnames(results@cluster.abundances)
+samples_BPD19 = c("BPD19_BB078","BPD19_BB231","BPD19_BC641","BPD19_BD619","BPD19_BD620")
+samples_PBD03 = c("PBD03_BB078","PBD03_BB231","PBD03_BC641","PBD03_BD619","PBD03_BD620")
+samples_PBD08 = c("PBD08_BB078","PBD08_BB231","PBD08_BC641","PBD08_BD619","PBD08_BD620")
+samples_PBD14 = c("PBD14_BB078","PBD14_BB231","PBD14_BC641","PBD14_BD619","PBD14_BD620")
+samples_PBD28 = c("PBD28_BB078","PBD28_BB231","PBD28_BC641","PBD28_BD619","PBD28_BD620")
+samples_PPD03 = c("PPD03_BB078","PPD03_BB231","PPD03_BC641","PPD03_BD619","PPD03_BD620")
+samples_PPD08 = c("PPD08_BB078","PPD08_BB231","PPD08_BC641","PPD08_BD619","PPD08_BD620")
+samples_PPD14 = c("PPD14_BB078","PPD14_BB231","PPD14_BC641","PPD14_BD619","PPD14_BD620")
+samples_PPD57 = c("PPD57_BB078","PPD57_BB231","PPD57_BC641","PPD57_BD619","PPD57_BD620")
+
+countViewer(results, samples = samples)
+
+resultsAC <- identifyAC(results, samples = samples, mu = 1, th.pvalue = 0.01)
+plot(resultsAC)
+
+resultsDAC <- identifyDAC(results, condition1 = samples_BPD19, condition2 = samples_PBD14, th.pvalue = 0.05, th.fc = 2, method.paired = TRUE)
+plot(resultsDAC)
+
+
