@@ -46,9 +46,66 @@ plot
 DataCell@raw.markers
 
 
-
+#Metadata
 metadata <- data.frame(individual = gsub("\\.fcs", "", basename(files)))
 metadata$condition <- sapply(strsplit(metadata$individual, "_"), function(x) x[1])
 metadata$individual <- sapply(strsplit(metadata$individual, "_"), function(x) x[2])
 rownames(metadata) <- paste(metadata$condition, metadata$individual, sep = "_")
 DataCell <- assignMetadata(DataCell, metadata = metadata)
+
+
+#UMAP algorithm
+DataCell <- generateManifold(DataCell, 
+                             method = "UMAP")
+
+#Clusters
+DataCell <- identifyClusters(DataCell, 
+                             space = "manifold", 
+                             method = "kmeans", 
+                             centers = 300, 
+                             nstart = 3)
+
+plotClustersCounts(DataCell, 
+                   clusters = NULL,
+                   sort = TRUE)
+
+#2_CLUSTER CONTROL
+#Small clusters ?
+QCS <- QCSmallClusters(DataCell,
+                       th.size = 50, 
+                       plot.device = TRUE)
+#uniform clusters ? 
+QCU <- QCUniformClusters(DataCell,
+                         uniform.test = "both",
+                         th.pvalue = 0.05,
+                         th.IQR = 2,
+                         plot.device = TRUE)
+
+#Clusters' plot 
+plotManifold(DataCell, 
+             markers = "CD3",
+             samples = NULL,
+             downsampling = 200000)
+
+#3_Heatmap
+hm.exp <- plotHmExpressions(DataCell, 
+                            metaclusters = 9)
+gridExtra::grid.arrange(hm.exp)
+plot(hm.exp)
+
+#Heatmap with MOI
+hm.exp <- plotHmExpressions(DataCell, 
+                            markers = c("CD3", "CD127", "CD45RA", "CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67"),
+                            metaclusters = 9)
+gridExtra::grid.arrange(hm.exp)
+plot(hm.exp)
+
+#Marker density
+plotMarkerDensity(DataCell, 
+                  clusters = "58")
+
+
+#FlowSOM
+DataCell <- identifyClusters(DataCell, 
+                             space = "manifold", 
+                             method = "FlowSOM")
