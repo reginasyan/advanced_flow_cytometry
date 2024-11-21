@@ -1,39 +1,57 @@
 library(devtools)
 library(spade)
 library("CellVizR")
+library("SPADEVizR")
 
-setwd("~/advanced_cytometry")
+setwd("~/I2S_workshop")
 files <- list.files("./01_fcs", 
                     pattern = "fcs", full.names = TRUE)
 
 DataCell <- import(files, 
                    filetype = "fcs", 
-                   transform = "logicle", 
-                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","CD45RA","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"), 
+                   transform = "arcsinh", 
+                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"), 
                    d.method = "uniform",
                    parameters.method = list("target.percent" = 0.1))
+
+
+# the set of marker to use
+clustering_markers <- c(
+  "(Pr141)Di",
+  "(Nd142)Di",
+  "(Nd143)Di",
+  "(Nd145)Di",
+  "(Nd148)Di",
+  "(Sm149)Di",
+  "(Eu151)Di",
+  "(Eu153)Di",
+  "(Gd156)Di", 
+  "(Gd158)Di",
+  "(Tb159)Di",
+  "(Gd160)Di",
+  "(Dy162)Di",
+  "(Er167)Di",
+  "(Tm169)Di",
+  "(Yb171)Di",
+  "(Yb174)Di")
 
 SPADE.driver(files, 
              file_pattern = ".fcs",
              out_dir = "./05_spade", 
              cluster_cols = clustering_markers,
-             )
+             k=200
+)
 
-# set of marker to use
-clustering_markers <- c(
-"(Pr141)Di",
-"(Nd142)Di",
-"(Nd143)Di",
-"(Nd145)Di",
-"(Nd148)Di",
-"(Sm149)Di",
-"(Eu151)Di",
-"(Eu153)Di",
-"(Gd158)Di",
-"(Tb159)Di",
-"(Gd160)Di",
-"(Dy162)Di",
-"(Er167)Di",
-"(Tm169)Di",
-"(Yb171)Di")
-	
+tree_gml = list.files("./05_spade/", 
+                      pattern = "mst.gml")
+
+graph = read_graph("./05_spade/mst.gml",
+           format = "gml")
+
+plot(graph)
+
+SPADE.plot.trees(graph,
+                 files = "./05_spade"
+)
+
+results <- importResultsFromSPADE("./05_spade/")
