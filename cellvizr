@@ -145,11 +145,13 @@ dev.off()
 
 #Volcanoplot
 
+#Volcanoplot
+
 samples_baseline = selectSamples(DataCell, condition = "BPD19")
 samples_PPD03 = selectSamples(DataCell, condition = "PPD03" )
 
 DataCell <- computeStatistics(DataCell, 
-                              condition = samples_PP, 
+                              condition = samples_PPD03, 
                               ref.condition = samples_baseline,
                               comparison = "samples_PPD03 vs. samples_baseline", 
                               test.statistics = "t.test",
@@ -160,3 +162,4 @@ plotVolcano(DataCell,
             th.pv = 1.3,
             th.fc = 1.5,
             plot.text = TRUE)
+
