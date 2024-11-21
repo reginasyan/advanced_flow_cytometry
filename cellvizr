@@ -120,3 +120,12 @@ plot(hm.exp)
 #Marker density
 plotMarkerDensity(DataCell, 
                   clusters = "58")
+
+
+#loop for creating UMAP for all conditions
+pdf("./03_figures/umap_all_samples_plot.pdf", height = 8,width = 8)
+for (sample in unique(DataCell@metadata$condition)){
+  plotManifold(DataCell, sample = sample, markers = "clusters")+ 
+    ggplot2::guides(color = "none")
+}
+dev.off()
