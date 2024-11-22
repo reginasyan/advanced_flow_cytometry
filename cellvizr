@@ -84,6 +84,10 @@ plotClustersCounts(DataCell,
                    clusters = NULL,
                    sort = TRUE)
 
+#SAVE CELL
+save(DataCell,file = "DataCell.Rsave")
+load("./rsave/DataCell.Rsave")
+
 #2_CLUSTER CONTROL
 #Small clusters ?
 QCS <- QCSmallClusters(DataCell,
