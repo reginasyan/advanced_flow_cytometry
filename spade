@@ -1,21 +1,11 @@
 library(devtools)
-library(spade)
 library("CellVizR")
 library("SPADEVizR")
 
-setwd("~/I2S_workshop")
+setwd("~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/advanced_cytometry")
 files <- list.files("./01_fcs", 
                     pattern = "fcs", full.names = TRUE)
 
-DataCell <- import(files, 
-                   filetype = "fcs", 
-                   transform = "arcsinh", 
-                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"), 
-                   d.method = "uniform",
-                   parameters.method = list("target.percent" = 0.1))
-
-
-# the set of marker to use
 clustering_markers <- c(
   "(Pr141)Di",
   "(Nd142)Di",
@@ -25,36 +15,19 @@ clustering_markers <- c(
   "(Sm149)Di",
   "(Eu151)Di",
   "(Eu153)Di",
-  "(Gd156)Di", 
   "(Gd158)Di",
   "(Tb159)Di",
   "(Gd160)Di",
   "(Dy162)Di",
   "(Er167)Di",
   "(Tm169)Di",
-  "(Yb171)Di",
-  "(Yb174)Di")
+  "(Yb171)Di")
 
-SPADE.driver(files, 
-             file_pattern = ".fcs",
-             out_dir = "./05_spade", 
-             cluster_cols = clustering_markers,
-             k=200
-)
+markers_of_non_interest = c("CD62L","CD38","IgD","HLADR","CD95","Dead","Beads","Cells-(Ir191)Di","Cells-(Ir193)Di","CD138","CD14","TNFa","IL10","B5R","Bcl-6","CD195","Time","density","Cell_length")
 
-tree_gml = list.files("./05_spade/", 
-                      pattern = "mst.gml")
+results <- importResultsFromSPADE("./05_spade_200/",
+                                  exclude.markers = markers_of_non_interest)
 
-graph = read_graph("./05_spade/mst.gml",
-           format = "gml")
-
-plot(graph)
-
-SPADE.plot.trees(graph,
-                 files = "./05_spade"
-)
-
-results <- importResultsFromSPADE("./05_spade/")
 
 samples = colnames(results@cluster.abundances)
 samples_BPD19 = c("BPD19_BB078","BPD19_BB231","BPD19_BC641","BPD19_BD619","BPD19_BD620")
@@ -62,17 +35,64 @@ samples_PBD03 = c("PBD03_BB078","PBD03_BB231","PBD03_BC641","PBD03_BD619","PBD03
 samples_PBD08 = c("PBD08_BB078","PBD08_BB231","PBD08_BC641","PBD08_BD619","PBD08_BD620")
 samples_PBD14 = c("PBD14_BB078","PBD14_BB231","PBD14_BC641","PBD14_BD619","PBD14_BD620")
 samples_PBD28 = c("PBD28_BB078","PBD28_BB231","PBD28_BC641","PBD28_BD619","PBD28_BD620")
-samples_PPD03 = c("PPD03_BB078","PPD03_BB231","PPD03_BC641","PPD03_BD619","PPD03_BD620")
-samples_PPD08 = c("PPD08_BB078","PPD08_BB231","PPD08_BC641","PPD08_BD619","PPD08_BD620")
-samples_PPD14 = c("PPD14_BB078","PPD14_BB231","PPD14_BC641","PPD14_BD619","PPD14_BD620")
+samples_PPD03 = c("PPD03_BB078","PPD03_BB231","PPD03_BC641","PPD03_BD619")
+samples_PPD08 = c("PPD08_BB078","PPD08_BC641","PPD08_BD619","PPD08_BD620")
+samples_PPD14 = c("PPD14_BB078","PPD14_BC641","PPD14_BD619","PPD14_BD620")
 samples_PPD57 = c("PPD57_BB078","PPD57_BB231","PPD57_BC641","PPD57_BD619","PPD57_BD620")
+
+
+markers_of_interest <- c("CD3", "CD127", "CD45RA", "CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67")
 
 countViewer(results, samples = samples)
 
+#heatmap
+heatmapViewer(results)
+plot(results)
+
+#AC&DAC
 resultsAC <- identifyAC(results, samples = samples, mu = 1, th.pvalue = 0.01)
 plot(resultsAC)
 
-resultsDAC <- identifyDAC(results, condition1 = samples_BPD19, condition2 = samples_PBD14, th.pvalue = 0.05, th.fc = 2, method.paired = TRUE)
+resultsDAC_PPD03 <- identifyDAC(results, condition1 = samples_PPD03, condition2 = samples_BPD19, th.pvalue = 0.05, th.fc = 2, method.paired = TRUE)
+plot(resultsDAC_PBD08)
+
+#treeview
+treeViewer(results, samples = samples, marker = "Ki67")
+
+#loop for PNGs
+for (marker_name in markers_of_interest) {
+  # Construct output file name
+  output_file <- file.path(output_dir, paste0(marker_name, "_tree.png"))
+  
+  # Generate and save PNG
+  png(filename = output_file, width = 2000, height = 2510)
+  treeViewer(results, samples = samples, marker = marker_name)
+  dev.off()  # Close the PNG device
+}
+
+#tree with DAC highlight
+treeViewer(results, samples = samples, highlight = resultsDAC, marker = "CD21")
+
+#Correlated Clusters
+variable <- c("PPD00_BB078" = 50, "PPD00_BB231" = 50, "PPD00_BC641" = 50, "PPD00_BD619" = 50, "PPD00_BD620" = 50, "PBD08_BB078" = 32541, "PBD08_BB231" = 16769, "PBD08_BC641" = 16987, "PBD08_BD619" = 11592, "PBD08_BD620" = 7419, "PBD28_BB078" = 14621, "PBD28_BB231" = 7030, "PBD28_BC641" = 1048, "PBD28_BD619" = 3369, "PBD28_BD620" = 3881)
+resultsCC <- identifyCC(results, variable = variable, th.correlation = 0.8, th.pvalue = 0.05)
+
+#classification based on abundance profile 
+set.seed(42)
+results_AP <- classifyAbundanceProfiles(results, method = "k-means", method.parameter = 6)
+print(results_AP)
+plot(results_AP)
+
+#Cell cluster abundance by sample by timeline 
+clusters <- c("1","2")
+streamgraphViewer(results, samples = samples, clusters = clusters)
+
+
+stats_signif_down <- resultsDAC@results[resultsDAC@results$fold.change <= -1 & 
+                                          -log10(resultsDAC@results$pvalue) >= 1.3,]$cluster
+
+
+
 plot(resultsDAC)
 
 
