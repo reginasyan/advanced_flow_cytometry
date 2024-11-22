@@ -25,8 +25,15 @@ clustering_markers <- c(
 
 markers_of_non_interest = c("CD62L","CD38","IgD","HLADR","CD95","Dead","Beads","Cells-(Ir191)Di","Cells-(Ir193)Di","CD138","CD14","TNFa","IL10","B5R","Bcl-6","CD195","Time","density","Cell_length")
 
-results <- importResultsFromSPADE("./05_spade_200/",
-                                  exclude.markers = markers_of_non_interest)
+load("./rsave/results_spade.Rsave")
+load("./rsave/resultsDAC_PBD03_spade.Rsave")
+load("./rsave/resultsDAC_PBD08_spade.Rsave")
+load("./rsave/resultsDAC_PBD14_spade.Rsave")
+load("./rsave/resultsDAC_PBD28_spade.Rsave")
+load("./rsave/resultsDAC_PPD03_spade.Rsave")
+load("./rsave/resultsDAC_PPD08_spade.Rsave")
+load("./rsave/resultsDAC_PPD14_spade.Rsave")
+load("./rsave/resultsDAC_PPD57_spade.Rsave")
 
 
 samples = colnames(results@cluster.abundances)
