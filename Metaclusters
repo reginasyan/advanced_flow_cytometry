@@ -57,3 +57,7 @@ DataCell_meta <- createMetaclusters(DataCell,
                                     metacluster.name = "10")
 getwd()
 cluster_metacluster = read_excel("./02_data/cluster_metacluster.xlsx")
+
+cluster_metacluster$clusters <- as.character(cluster_metacluster$clusters)
+
+combined_data <- left_join(significant_upreg_clusters_by_comparison, cluster_metacluster, by = "clusters")
