@@ -1,0 +1,59 @@
+library(dplyr)
+install.packages("readxl")  
+library(readxl)            
+
+# Set thresholds
+th.pv <- 1.3   # -log10(p-value)
+th.fc <- 1.5   # log2 fold change
+th.fc2 <- -1.5
+# Extract statistics
+stats <- DataCell@statistic
+
+# Add -log10 transformation for p-values if not already in stats
+stats$log10_p <- -log10(stats$pvalue)
+
+up_filtered_stats <- stats %>% filter(log10_p >= th.pv & lfc >= th.fc)
+up_grouped_stats <- up_filtered_stats %>% group_by(comparison)
+significant_upreg_clusters_by_comparison <-  up_grouped_stats[, c(1,2)]
+
+down_filtered_stats <- stats %>% filter(log10_p >= th.pv & lfc <= th.fc2)
+down_grouped_stats <- down_filtered_stats %>% group_by(comparison)
+significant_downreg_clusters_by_comparison <-  down_grouped_stats[, c(1,2)]
+
+
+DataCell_meta <- createMetaclusters(DataCell, 
+                               clusters = c("119", "109", "110", "120", "100", "86", "88", "108", "98", "99", "87"), 
+                               metacluster.name = "1")
+
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("122", "121", "112", "153", "101", "111", "102", "91", "89", "103", "104", "131", "133", "113", "130", "134", "114", "123", "124", "132", "145", "154", "92", "82", "79", "81"), 
+                                    metacluster.name = "2")
+
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("128", "141", "161", "127", "118", "129", "173", "107", "140", "117", "106", "125"), 
+                                    metacluster.name = "3")
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("126", "142", "147", "159", "160", "148", "162", "149", "175", "163", "176", "174", "156", "76", "171", "157", "158", "139", "172", "138", "146", "170"), 
+                                    metacluster.name = "4")
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("151", "143", "164", "177", "150", "144", "152", "165", "178", "179", "84", "166", "180", "83"), 
+                                    metacluster.name = "5")
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("90", "80", "1", "97", "21", "20", "13", "74", "15", "26", "16", "45", "39", "44", "34", "35", "27", "85", "78", "32", "2", "41", "22", "6", "54", "53", "47", "46","55", "7", "8"), 
+                                    metacluster.name = "6")
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("33", "23", "24", "73", "75", "25", "48", "43", "31", "19", "62", "56", "64", "65", "67", "9", "11", "18", "12", "38", "37", "50", "30", "51", "49", "52"), 
+                                    metacluster.name = "7")
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("3", "4", "5", "14", "61", "66", "28", "10", "17"), 
+                                    metacluster.name = "8")
+
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("59", "68", "36", "29", "57", "60", "63", "69"), 
+                                    metacluster.name = "9")
+
+DataCell_meta <- createMetaclusters(DataCell, 
+                                    clusters = c("137", "96", "116", "72", "94", "77", "169", "136", "168", "95", "71", "167", "58", "40", "105", "93", "115", "155", "42", "135", "70"), 
+                                    metacluster.name = "10")
+getwd()
+cluster_metacluster = read_excel("./02_data/cluster_metacluster.xlsx")
