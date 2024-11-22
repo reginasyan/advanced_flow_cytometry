@@ -138,3 +138,12 @@ plotVolcano(DataCell,
             th.fc = 1.5,
             plot.text = TRUE)
 
+# Boxplot for differential analysis
+plotBoxplot(DataCell, 
+            clusters = "99",
+            samples = NULL,
+            observation = "condition", 
+            value.y = "percentage",
+            test.statistics = "t.test") +
+  ggplot2::labs(title = "Boxplot representation for timepoint")
+
