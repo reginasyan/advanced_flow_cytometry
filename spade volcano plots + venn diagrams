@@ -1,0 +1,143 @@
+library(devtools)
+library("CellVizR")
+library("SPADEVizR")
+
+setwd("~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/advanced_cytometry")
+
+samples = colnames(results@cluster.abundances)
+samples_BPD19 = c("BPD19_BB078","BPD19_BB231","BPD19_BC641","BPD19_BD619","BPD19_BD620")
+samples_PBD03 = c("PBD03_BB078","PBD03_BB231","PBD03_BC641","PBD03_BD619","PBD03_BD620")
+samples_PBD08 = c("PBD08_BB078","PBD08_BB231","PBD08_BC641","PBD08_BD619","PBD08_BD620")
+samples_PBD14 = c("PBD14_BB078","PBD14_BB231","PBD14_BC641","PBD14_BD619","PBD14_BD620")
+samples_PBD28 = c("PBD28_BB078","PBD28_BB231","PBD28_BC641","PBD28_BD619","PBD28_BD620")
+samples_PPD03 = c("PPD03_BB078","PPD03_BB231","PPD03_BC641","PPD03_BD619")
+samples_PPD08 = c("PPD08_BB078","PPD08_BC641","PPD08_BD619","PPD08_BD620")
+samples_PPD14 = c("PPD14_BB078","PPD14_BC641","PPD14_BD619","PPD14_BD620")
+samples_PPD57 = c("PPD57_BB078","PPD57_BB231","PPD57_BC641","PPD57_BD619","PPD57_BD620")
+
+#loading results and DAC
+load("./07_rsave/spade/results_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PBD03_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PBD08_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PBD14_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PBD28_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PPD03_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PPD08_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PPD14_spade.Rsave")
+load("./07_rsave/spade/resultsDAC_PPD57_spade.Rsave")
+
+# Or generate a loop to create DAC and plot it : 
+output_dir <- "~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/advanced_cytometry/03_figures/05_volcanos/spade_200"
+## Create a list of samples to test, with names for timepoints to test
+samples_condition1 <- list(samples_PBD03, samples_PBD08, samples_PBD14, samples_PBD28, samples_PPD03, samples_PPD08, samples_PPD14, samples_PPD57)
+names(samples_condition1) <- c("PBD03", "PBD08", "PBD14", "PBD28","PPD03", "PPD08", "PPD14", "PPD57")
+## Loop for each time point 
+for (condition_name in names(samples_condition1)) {
+  resultsDAC <- identifyDAC(
+    results, 
+    condition1 = samples_condition1[[condition_name]], 
+    condition2 = samples_BPD19, 
+    th.pvalue = 0.05, 
+    th.fc = 2, 
+    method.paired = FALSE
+  )
+  
+  # Save the plot for each timepoint
+  output_file <- file.path(output_dir, paste0("DAC_", condition_name, ".png"))
+  png(filename = output_file, width = 1000, height = 696)
+  plot(resultsDAC)
+  dev.off()
+}
+
+# Exctract data from volcanoplots 
+## Downregulated clusters
+stats_signif_down <- resultsDAC@results[resultsDAC@results$fold.change <= -1 & 
+                                          -log10(resultsDAC@results$pvalue) >= 1.3,]$cluster
+print(stats_signif_down)
+
+
+## Upregulated clusters
+stats_signif_up <- resultsDAC@results[resultsDAC@results$fold.change >= 1 & 
+                                      -log10(resultsDAC@results$pvalue) >= 1.3,]$cluster
+print(stats_signif_up)
+
+### loop
+#### create a list of DAC results sorted by timepoint
+resultsDAC_list <- list(
+  PBD03 = resultsDAC_PBD03,
+  PBD08 = resultsDAC_PBD08,
+  PBD14 = resultsDAC_PBD14,
+  PBD28 = resultsDAC_PBD28,
+  PPD03 = resultsDAC_PPD03,
+  PPD08 = resultsDAC_PPD08,
+  PPD14 = resultsDAC_PPD14,
+  PPD57 = resultsDAC_PPD57
+)
+for (timepoint in names(resultsDAC_list)) {
+  #downs
+  stats_signif_down <- resultsDAC@results[resultsDAC_list[[timepoint]]@results$fold.change <= -1 & 
+                                        -log10(resultsDAC_list[[timepoint]]@results$pvalue) >= 1.3, ]$cluster
+  
+  #ups
+  stats_signif_up <- resultsDAC@results[resultsDAC_list[[timepoint]]@results$fold.change >= 1 & 
+                                  -log10(resultsDAC_list[[timepoint]]@results$pvalue) >= 1.3,]$cluster
+  
+  # Store results in lists
+  downregulated_clusters[[timepoint]] <- stats_signif_down
+  upregulated_clusters[[timepoint]] <- stats_signif_up
+}
+____________________________________________________________________________________________________
+library(eulerr)
+
+upregulated_clusters_PP = list(
+    PPD03 = upregulated_clusters$PPD03,
+    PPD08 = upregulated_clusters$PPD08,
+    PPD14 = upregulated_clusters$PPD14,
+    PPD57 = upregulated_clusters$PPD57)
+
+upregulated_clusters_PB = list(
+  PBD03 = upregulated_clusters$PBD03,
+  PBD08 = upregulated_clusters$PBD08,
+  PBD14 = upregulated_clusters$PBD14,
+  PBD57 = upregulated_clusters$PBD57)
+
+downregulated_clusters_PP = list(
+  PPD03 = downregulated_clusters$PPD03,
+  PPD08 = downregulated_clusters$PPD08,
+  PPD14 = downregulated_clusters$PPD14,
+  PPD57 = downregulated_clusters$PPD57)
+
+downregulated_clusters_PB = list(
+  PBD03 = downregulated_clusters$PBD03,
+  PBD08 = downregulated_clusters$PBD08,
+  PBD14 = downregulated_clusters$PBD14,
+  PBD57 = downregulated_clusters$PBD57)
+
+#save and load results
+load("./07_rsave/spade/upregulated_clusters.Rsave")
+load("./07_rsave/spade/upregulated_clusters_PP.Rsave")
+load("./07_rsave/spade/upregulated_clusters_PB.Rsave")
+load("./07_rsave/spade/downregulated_clusters.Rsave")
+load("./07_rsave/spade/downregulated_clusters_PP.Rsave")
+load("./07_rsave/spade/downregulated_clusters_PB.Rsave")
+
+plot(euler(upregulated_clusters_PP),
+      fills = TRUE,
+      edges = TRUE,
+      legend = TRUE,
+      labels = identical(legend, TRUE),
+      quantities = TRUE,
+      strips = NULL,
+      main = NULL,
+      n = 200L)
+
+plot(euler(downregulated_clusters_PP),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = NULL,
+     n = 200L)
+
