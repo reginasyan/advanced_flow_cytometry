@@ -1,29 +1,3 @@
-#installing packages
-
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-BiocManager::install("flowCore")
-BiocManager::install("flowViz")
-BiocManager::install("flowVS")
-BiocManager::install("flowAI")
-BiocManager::install("flowAI")
-BiocManager::install("PeacoQC")
-BiocManager::install("CATALYST")
-BiocManager::install("SingleCellExperiment")
-
-if(!requireNamespace("devtools", quietly=TRUE))
-  install.packages("devtools")
-
-devtools::install_github('saeyslab/CytoNorm')
-install.packages("uwot")
-install.packages("knitr")
-install.packages("xlsx")
-install.packages("uwot")
-BiocManager::install("flowCore")
-install.packages("openxlsx")
-
-
 # set seed and install libraries
 set.seed(123)
 library(flowCore)
@@ -39,6 +13,7 @@ library(knitr)
 library(xlsx)
 library("flowCore")
 library(openxlsx)
+library("flowCut")
 
 
 #directories
@@ -63,8 +38,6 @@ antigen <- pData(parameters(fcs_data[[1]]))$desc
 panel <- data.frame(fcs_colname, antigen, marker_class, row.names = NULL)
 write.xlsx(panel, file="~/Regina/training_data/project/04_exports/panel_A.xlsx", sheetName="Panel_A")
 
-# Interactive QC
-flow_iQC()
 
 #downsample the data
 
@@ -82,7 +55,6 @@ fcs_data_small <- Downsampling_FlowSet(x=fcs_data, samplesize = 2000)
 #inspect the data to decide which type of transformation suits better
 expression_data <- fcs_data[[1]]
 expression_data <- expression_data@exprs
-
 
 
 #tranform the data with FlowCore
@@ -103,14 +75,41 @@ densityplot(~`(Pr141)Di`+`(Nd142)Di`+`(Nd143)Di`+`(Nd145)Di`+`(Nd148)Di`+`(Sm149
 # Close the PDF device to save the file
 dev.off()
 
+transformed_flowset[[2]]@exprs <- transformed_flowset[[2]]@exprs[order(transformed_flowset[[2]]@exprs[, "Time"]), ]
+
+res_flowCut <- flowCut(transformed_flowset[[2]], FileID = 2, Plot = "All", Segment=1000)
+
+
+
+
+# Loop through all 42 samples in transformed_flowset
+for (i in 1:42) {
+  file_name <- basename(transformed_flowset[[i]]@description$FILENAME)
+  # Sort the data by time column for each sample
+  transformed_flowset[[i]]@exprs <- transformed_flowset[[i]]@exprs[order(transformed_flowset[[i]]@exprs[, "Time"]), ]
+  
+  # Apply the flowCut function for each sample
+  res_flowCut <- flowCut(transformed_flowset[[i]], FileID = file_name, Plot = "All", Segment = 1000)
+  
+  # Optionally, print the result or save it
+  print(paste("Results for sample", i))
+  print(res_flowCut$data)
+  
+}
+
 
 outdir <- file.path("C:/Users/Admin/Documents/Regina/training_data/02_data", "Transformed FCS files") 
 filenames <- paste("tf",fcs_data@phenoData@data$name)
-write.flowSet(fcs_transform, outdir = outdir, filename = filenames) #create a new directory with transformed FCS files
+write.flowSet(transformed_flowset, outdir = outdir, filename = filenames) #create a new directory with transformed FCS files
 
+#creating metadata
 
+file_name <- fsApply(transformed_flowset, identifier)
+sample_id <- keyword(fcs_data, "GUID")# if a Sample ID was added to the original file you could also extract Sample ID or for example TUBE NAME or construct a column with new sample id's yourself
+md <- data.frame(file_name, sample_id, row.names=NULL)
 
-md <-read.xlsx(file="C:/Users/Admin/Documents/Regina/training_data/02_data/md.xlsx", header=TRUE, sheetIndex = 1)
+colnames(md) <- c("file_name","sample_id")
+kable(md_2)
 
 
 #subsampling
@@ -270,3 +269,4 @@ Cell_freq_clusters <- plotAbundances(sce, k = "meta12", group_by = "sample_id")
 print(Cell_freq_clusters)
 Cell_freq_clusters_data <- Cell_freq_clusters[["data"]]
 write.xlsx(x=Cell_freq_clusters_data, file="Cellclusterfrequencies.xlsx")
+
