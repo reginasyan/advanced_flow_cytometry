@@ -1,3 +1,29 @@
+#installing packages
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("flowCore")
+BiocManager::install("flowViz")
+BiocManager::install("flowVS")
+BiocManager::install("SingleCellExperiment")
+BiocManager::install("flowCut")
+BiocManager::install("CATALYST")
+
+if(!requireNamespace("devtools", quietly=TRUE))
+  install.packages("devtools")
+
+devtools::install_github('saeyslab/CytoNorm')
+install.packages("uwot")
+install.packages("knitr")
+install.packages("xlsx")
+install.packages("openxlsx")
+install.packages("umap")
+install.packages("remotes")
+remotes::install_version("Matrix", version = "1.6-1")
+install.packages("irlba", type="source")
+packageVersion("Matrix")
+
 # set seed and install libraries
 set.seed(123)
 library(flowCore)
@@ -14,7 +40,6 @@ library(xlsx)
 library("flowCore")
 library(openxlsx)
 library("flowCut")
-
 
 #directories
 setwd("~/R/advanced flow cytometry/project")
@@ -39,19 +64,6 @@ panel <- data.frame(fcs_colname, antigen, marker_class, row.names = NULL)
 write.xlsx(panel, file="~/Regina/training_data/project/04_exports/panel_A.xlsx", sheetName="Panel_A")
 
 
-#downsample the data
-
-Downsampling_FlowSet <- function(x, samplesize , replace=TRUE, prob=NULL){
-  if(missing(samplesize))
-    samplesize <- min(flowCore::fsApply(x,nrow))
-  flowCore::fsApply(x, function(ff){
-    i <- sample(nrow(ff), size = samplesize, replace=replace, prob)
-    ff[i,]
-  })
-}
-
-fcs_data_small <- Downsampling_FlowSet(x=fcs_data, samplesize = 2000)
-
 #inspect the data to decide which type of transformation suits better
 expression_data <- fcs_data[[1]]
 expression_data <- expression_data@exprs
@@ -75,7 +87,7 @@ densityplot(~`(Pr141)Di`+`(Nd142)Di`+`(Nd143)Di`+`(Nd145)Di`+`(Nd148)Di`+`(Sm149
 # Close the PDF device to save the file
 dev.off()
 
-# Loop through all 42 samples in transformed_flowset
+# Loop for the QC by flowCut
 for (i in 1:42) {
   file_name <- basename(transformed_flowset[[i]]@description$FILENAME)
   # Sort the data by time column for each sample
@@ -117,47 +129,43 @@ Downsampling_FlowSet <- function(x, samplesize , replace=TRUE, prob=NULL){
 }
 
 
-
 Subsampling_FlowSet <- function(x, fraction, md){
-  # Calculate the number of samples to select based on the fraction
-  b <- round(fraction * length(x), digits = 0)
+  b <- round(fraction*length(x), digits=0)
   
-  # Sample the indices for the downsampled data
-  listq <- sample(x = 1:length(x), b, replace = FALSE)
+  listq <- sample(x=length(x), b, replace=FALSE)
   listq <- sort(listq)
   
-  # Subset the FlowSet based on the sampled indices
-  fcs_train <- x[listq]
+  fcs_train<-x[c(listq)]
   
-  # Subset the metadata based on the same sampled indices
-  md_train <- md[listq, ]
+  md_train <- md[c(listq),]
   
-  # Update the global variables for training set
+  
   fcs_train <<- fcs_train
   md_train <<- md_train
   
-  # Get the remaining samples for the test set
   listy <- 1:length(x)
-  listz <- setdiff(listy, listq)
+  
+  listz <- subset(listy, !(listy %in% listq))
+  
   listz <- sort(listz)
   
-  # Create the test set by excluding the training samples
-  fcs_test <- x[listz]
-  md_test <- md[listz, ]
+  fcs_test <- x[c(listz)]
   
-  # Update the global variables for test set
+  md_test <- md[c(listz),]
+  
   fcs_test <<- fcs_test
   md_test <<- md_test
+  
 }
 
 
-Subsampling_FlowSet(transformed_flowset, 0.25, md) #test and train set are created
-
+Subsampling_FlowSet(transformed_flowset,0.25, md=md) #test and train set are created
 
 #UMAP
 
-fcs_train <- Downsampling_FlowSet(fcs_train, samplesize =10000) # you can still downsample your training set if needed, but you can also include all or more cells
-sce_train <- prepData(fcs_train, md=md, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("condition", "individual")))
+fcs_train <- Downsampling_FlowSet(fcs_train, samplesize =20000) # you can still downsample your training set if needed, but you can also include all or more cells
+
+sce_train <- prepData(fcs_train, md=md_train, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("individual", "condition")))
 assayNames(sce_train)[1] <- "exprs"
 
 exprs_train <- assay(sce_train, "exprs")
@@ -166,16 +174,16 @@ exprs_train <- exprs_train[,c(marker_type)] #markers you want to use for cluster
 
 set.seed(1234)
 
-umap_train <- umap(exprs_train, n_neighbors=5)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
+umap_train <- uwot::umap(exprs_train, n_neighbors=5)
+reducedDim(sce_train, "UMAP")<- umap_train
 plotDR(sce_train, "UMAP", color_by="sample_id")
 
-umap_train <- umap(exprs_train, n_neighbors=15)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
+umap_train <- uwot::umap(exprs_train, n_neighbors=15)
+reducedDim(sce_train, "UMAP")<- umap_train
 plotDR(sce_train, "UMAP", color_by="sample_id")
 
-umap_train <- umap(exprs_train, n_neighbors=50)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
+umap_train <- uwot::umap(exprs_train, n_neighbors=50)
+reducedDim(sce_train, "UMAP")<- umap_train
 plotDR(sce_train, "UMAP", color_by="sample_id")
 
 #if you chose the right n_neighbors, you can also test min_dist
@@ -265,4 +273,5 @@ Cell_freq_clusters <- plotAbundances(sce, k = "meta12", group_by = "sample_id")
 print(Cell_freq_clusters)
 Cell_freq_clusters_data <- Cell_freq_clusters[["data"]]
 write.xlsx(x=Cell_freq_clusters_data, file="Cellclusterfrequencies.xlsx")
+
 
