@@ -176,52 +176,52 @@ set.seed(1234)
 
 umap_train <- uwot::umap(exprs_train, n_neighbors=5)
 reducedDim(sce_train, "UMAP")<- umap_train
-plotDR(sce_train, "UMAP", color_by="sample_id")
+plotDR(sce_train, "UMAP", color_by="condition")
 
 umap_train <- uwot::umap(exprs_train, n_neighbors=15)
 reducedDim(sce_train, "UMAP")<- umap_train
-plotDR(sce_train, "UMAP", color_by="sample_id")
+plotDR(sce_train, "UMAP", color_by="condition")
 
 umap_train <- uwot::umap(exprs_train, n_neighbors=50)
 reducedDim(sce_train, "UMAP")<- umap_train
-plotDR(sce_train, "UMAP", color_by="sample_id")
+plotDR(sce_train, "UMAP", color_by="condition")
 
 #if you chose the right n_neighbors, you can also test min_dist
-umap_train <- umap(exprs_train, n_neighbors=15, min_dist = 0.01)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
-plotDR(sce_train, "UMAP", color_by="sample_id")
+umap_train <- uwot::umap(exprs_train, n_neighbors=15, min_dist = 0.01)
+reducedDim(sce_train, "UMAP")<- umap_train
+plotDR(sce_train, "UMAP", color_by="condition")
 
-umap_train <- umap(exprs_train, n_neighbors=15, min_dist = 0.1)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
-plotDR(sce_train, "UMAP", color_by="sample_id")
+umap_train <- uwot::umap(exprs_train, n_neighbors=15, min_dist = 0.1)
+reducedDim(sce_train, "UMAP")<- umap_train
+plotDR(sce_train, "UMAP", color_by="condition")
 
-umap_train <- umap(exprs_train, n_neighbors=15, min_dist = 0.5)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
-plotDR(sce_train, "UMAP", color_by="sample_id")
+umap_train <- uwot::umap(exprs_train, n_neighbors=15, min_dist = 0.5)
+reducedDim(sce_train, "UMAP")<- umap_train
+plotDR(sce_train, "UMAP", color_by="condition")
 
 # choose the optimal parameters, to assess robustness of the umap you can vary the seed
 
 set.seed(1234)
-umap_train <- umap(exprs_train, n_neighbors=15, min_dist = 0.01)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
-plotDR(sce_train, "UMAP", color_by="sample_id")
+umap_train <- uwot::umap(exprs_train, n_neighbors=15, min_dist = 0.01)
+reducedDim(sce_train, "UMAP")<- umap_train
+plotDR(sce_train, "UMAP", color_by="condition")
 
 set.seed(7460)
-umap_train <- umap(exprs_train, n_neighbors=15, min_dist = 0.01)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
-plotDR(sce_train, "UMAP", color_by="sample_id")
+umap_train <- uwot::umap(exprs_train, n_neighbors=15, min_dist = 0.01)
+reducedDim(sce_train, "UMAP")<- umap_train
+plotDR(sce_train, "UMAP", color_by="condition")
 
 set.seed(5024)
 umap_train <- uwot::umap(exprs_train, n_neighbors=15, min_dist = 0.01, ret_model = TRUE)
-reducedDim(sce_train, "UMAP")<- umap_train$layout
-plotDR(sce_train, "UMAP", color_by="sample_id")
-plotDR(sce_train, "UMAP", color_by="CD4")
-plotDR(sce_train, "UMAP", color_by="CD8")
+reducedDim(sce_train, "UMAP")<- umap_train$embedding
+plotDR(sce_train, "UMAP", color_by="condition")
+plotDR(sce_train, "UMAP", color_by="CD3")
+plotDR(sce_train, "UMAP", color_by="CD21")
 
 #add other samples to the UMAP
 fcs_test <- Downsampling_FlowSet(fcs_test, samplesize =20000)
 
-sce_test <-prepData(fcs_test, md=md_test, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="Sample_ID", factors=c("Group_ID", "batch")))
+sce_test <-prepData(fcs_test, md=md_test, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("Group_ID", "batch")))
 assayNames(sce_test)[1] <- "exprs"
 
 exprs_test <- assay(sce_test, "exprs")
@@ -247,7 +247,7 @@ plotDR(sce_total, "UMAP", color_by = "CD8")
 
 set.seed(5024)
 
-sce<- prepData(fcs_transform, md=md, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="Sample_ID", factors=c("Group_ID", "batch")))
+sce<- prepData(transformed_flowset, md=md, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="Sample_ID", factors=c("individual", "condition")))
 
 assayNames(sce)[1] <- "exprs"
 sce <- cluster(sce, features="type", maxK=12, seed=5024)
