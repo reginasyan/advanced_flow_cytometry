@@ -247,7 +247,7 @@ plotDR(sce_total, "UMAP", color_by = "CD8")
 
 set.seed(5024)
 
-sce<- prepData(transformed_flowset, md=md, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="Sample_ID", factors=c("individual", "condition")))
+sce<- prepData(transformed_flowset, md=md, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("individual", "condition")))
 
 assayNames(sce)[1] <- "exprs"
 sce <- cluster(sce, features="type", maxK=12, seed=5024)
