@@ -61,13 +61,13 @@ marker_class <- factor(marker_class, levels=c("type", "state", "none"))
 antigen <- pData(parameters(fcs_data[[1]]))$desc
 
 panel <- data.frame(fcs_colname, antigen, marker_class, row.names = NULL)
-write.xlsx(panel, file="~/Regina/training_data/project/04_exports/panel_A.xlsx", sheetName="Panel_A")
+write.xlsx(panel, file="~/04_exports/panel_A.xlsx", sheetName="Panel_A")
 
 
 #inspect the data to decide which type of transformation suits better
 expression_data <- fcs_data[[1]]
 expression_data <- expression_data@exprs
-
+expression_data
 
 #tranform the data with FlowCore
 markerstotransform <- panel[panel$marker_class != "none", 1]
@@ -78,7 +78,7 @@ transformed_flowset <- transform_list %on% fcs_data
 
 
 # Open the PDF device
-pdf("C:/Users/Admin/Documents/Regina/training_data/project/03_figures/Density_plot_transformation_FlowCore_asin.pdf")
+pdf("~/R/advanced flow cytometry/project/03_figures/Density_plot_transformation_FlowCore_asin.pdf")
 
 # Create the density plot
 densityplot(~`(Pr141)Di`+`(Nd142)Di`+`(Nd143)Di`+`(Nd145)Di`+`(Nd148)Di`+`(Sm149)Di`+`(Eu151)Di`+`(Eu153)Di`+`(Gd156)Di`+`(Gd158)Di`+`(Tb159)Di`+`(Gd160)Di`+`(Dy162)Di`+`(Er167)Di`+`(Tm169)Di`+`(Yb171)Di`+`(Yb174)Di`, fcs_data[[1]])
@@ -221,7 +221,7 @@ plotDR(sce_train, "UMAP", color_by="CD21")
 #add other samples to the UMAP
 fcs_test <- Downsampling_FlowSet(fcs_test, samplesize =20000)
 
-sce_test <-prepData(fcs_test, md=md_test, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("Group_ID", "batch")))
+sce_test <-prepData(fcs_test, md=md_test, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("individual", "condition")))
 assayNames(sce_test)[1] <- "exprs"
 
 exprs_test <- assay(sce_test, "exprs")
@@ -239,7 +239,7 @@ sce_total <- cbind(sce_train, sce_test)
 reducedDim(sce_total, "UMAP") <- umap_total
 
 plotDR(sce_total, "UMAP", color_by = "sample_id")
-plotDR(sce_total, "UMAP", color_by = "CD4")
+plotDR(sce_total, "UMAP", color_by = "condition")
 plotDR(sce_total, "UMAP", color_by = "CD8")
 
 
@@ -250,10 +250,10 @@ set.seed(5024)
 sce<- prepData(transformed_flowset, md=md, panel= panel, FACS = TRUE, transform=FALSE, md_cols =list(file="file_name", id="sample", factors=c("individual", "condition")))
 
 assayNames(sce)[1] <- "exprs"
-sce <- cluster(sce, features="type", maxK=12, seed=5024)
+sce <- cluster(sce, features="type", maxK=10, seed=5024)
 
 sce <- runDR(sce, "UMAP", cells = 6000, features = "type")
-plotDR(sce, "UMAP", color_by="meta12")
+plotDR(sce, "UMAP", color_by="meta10")
 plotDR(sce, "UMAP", color_by="CD4")
 plotDR(sce, "UMAP", color_by="CD8")
 
@@ -265,12 +265,23 @@ Cell_numbers_data <- Cell_numbers[["data"]] #dataframe of number of cells per sa
 
 #Heatmap of the median expression per marker per metacluster or sample, more information can be found in https://bioconductor.org/packages/release/bioc/html/CATALYST.html 
 
-plotExprHeatmap(sce, features = "type", by="cluster_id",k="meta12",scale = "last", q = 0, perc=TRUE,bars = FALSE)
+plotExprHeatmap(sce, features = "type", by="cluster_id",k="meta10",scale = "last", q = 0, perc=TRUE,bars = FALSE)
 
-plotExprHeatmap(sce, features = "type", by="sample_id",k="meta12",scale = "last", q = 0, perc=TRUE,bars = FALSE) #this plot can also be used to check for batch effects 
+plotExprHeatmap(sce, features = "type", by="cluster_id",k="meta10",scale = "never", q = 0, perc=TRUE,bars = FALSE)
 
-Cell_freq_clusters <- plotAbundances(sce, k = "meta12", group_by = "sample_id")
+plotExprHeatmap(sce, features = "type", by="sample_id",k="meta10",scale = "never", q = 0, perc=TRUE,bars = FALSE) #this plot can also be used to check for batch effects 
+
+
+
+# Open the PDF device
+pdf("~/R/advanced flow cytometry/project/03_figures/Cell_freq_clusters.pdf")
+
+# Create the density plot
+Cell_freq_clusters <- plotAbundances(sce, k = "meta10", group_by = "condition", col_clust = FALSE)
 print(Cell_freq_clusters)
+# Close the PDF device to save the file
+dev.off()
+
 Cell_freq_clusters_data <- Cell_freq_clusters[["data"]]
 write.xlsx(x=Cell_freq_clusters_data, file="Cellclusterfrequencies.xlsx")
 
