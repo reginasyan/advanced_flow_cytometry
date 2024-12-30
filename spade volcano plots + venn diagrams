@@ -149,3 +149,21 @@ plot(euler(downregulated_clusters_PP),
      main = NULL,
      n = 200L)
 
+#Extract subsets from Euler plot 
+PPD_up_euler = euler(upregulated_clusters_PP)
+PPD_up_subsets <- lapply(names(PPD_up_euler$original.values), function(subset) {
+  # Split subset name into individual time points
+  sets <- unlist(strsplit(subset, "&"))
+  
+  # If multiple sets are listed, intersect them; if just one, take it directly
+  if (length(sets) > 1) {
+    clusters <- Reduce(intersect, upregulated_clusters_PP[sets])
+  } else {
+    clusters <- upregulated_clusters_PP[[sets]]
+  }
+  
+  return(clusters)
+})
+
+# Assign subset names
+names(PPD_up_subsets) <- names(PPD_up_euler$original.values)
