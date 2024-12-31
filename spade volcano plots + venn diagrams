@@ -129,6 +129,7 @@ load("./07_rsave/spade/downregulated_clusters.Rsave")
 load("./07_rsave/spade/downregulated_clusters_PP.Rsave")
 load("./07_rsave/spade/downregulated_clusters_PB.Rsave")
 
+
 plot(euler(upregulated_clusters_PP),
       fills = TRUE,
       edges = TRUE,
@@ -136,7 +137,7 @@ plot(euler(upregulated_clusters_PP),
       labels = identical(legend, TRUE),
       quantities = TRUE,
       strips = NULL,
-      main = NULL,
+      main = "Upregulated clusters PP",
       n = 200L)
 
 plot(euler(downregulated_clusters_PP),
@@ -146,7 +147,47 @@ plot(euler(downregulated_clusters_PP),
      labels = identical(legend, TRUE),
      quantities = TRUE,
      strips = NULL,
-     main = NULL,
+     main = "Downregulated clusters PP",
+     n = 200L)
+
+plot(euler(upregulated_clusters_PB),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Upregulated clusters PB",
+     n = 200L)
+
+plot(euler(downregulated_clusters_PB),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Downregulated clusters PB",
+     n = 200L)
+
+plot(euler(upregulated_clusters),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Upregulated clusters",
+     n = 200L)
+
+plot(euler(downregulated_clusters),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Downregulated clusters",
      n = 200L)
 
 #Extract subsets from Euler plot 
