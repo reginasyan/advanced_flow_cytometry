@@ -1,0 +1,71 @@
+#Volcanoplot
+# Initialize statistic slot
+DataCell@statistic <- data.frame()
+# Select baseline samples (BPD19)
+samples_baseline <- selectSamples(DataCell, condition = "BPD19")
+# Define conditions for comparison
+list.conditions <- list("samples_PPD03" = selectSamples(DataCell, condition = "PPD03"),
+                        "samples_PPD08" = selectSamples(DataCell, condition = "PPD08"),
+                        "samples_PPD14" = selectSamples(DataCell, condition = "PPD14"),
+                        "samples_PPD57" = selectSamples(DataCell, condition = "PPD57"),
+                        "samples_PBD03" = selectSamples(DataCell, condition = "PBD03"),
+                        "samples_PBD08" = selectSamples(DataCell, condition = "PBD08"),
+                        "samples_PBD14" = selectSamples(DataCell, condition = "PBD14"),
+                        "samples_PBD28" = selectSamples(DataCell, condition = "PBD28"))
+
+# Initialize lists to store results
+upregulated_clusters_list <- list()
+downregulated_clusters_list <- list()
+
+# Set thresholds
+th.pv <- 1.3  # p-value threshold (log10 scale)
+th.fc <- 1.5  # fold change threshold
+
+# Loop through conditions, compute statistics, generate volcano plots, and extract up/downregulated clusters
+for (i in seq_along(list.conditions)) {
+  condition_name <- names(list.conditions)[i]
+  
+  # Compute statistics
+  DataCell <- computeStatistics(DataCell, 
+                                condition = list.conditions[[i]], 
+                                ref.condition = samples_baseline,
+                                comparison = paste0(condition_name, " vs. samples_baseline"), 
+                                test.statistics = "t.test",
+                                paired = FALSE)
+  
+  # Extract statistic result
+  stat_result <- DataCell@statistic
+  
+  # **Ensure fresh data by filtering only for the current comparison**
+  stat_result <- stat_result[stat_result$comparison == paste0(condition_name, " vs. samples_baseline"), ]
+  
+  # Remove NA values before filtering
+  stat_result <- stat_result[!is.na(stat_result$lfc) & !is.na(stat_result$pvalue), ]
+  
+  # Convert pvalue to -log10(pvalue) for comparison
+  stat_result$log_pvalue <- -log10(stat_result$pvalue)
+  
+  # Upregulated clusters (lfc > threshold and log10(pvalue) >= threshold)
+  upregulated_clusters_list[[paste0(condition_name, "_vs_samples_baseline")]] <- stat_result[stat_result$lfc > th.fc & stat_result$log_pvalue > th.pv, ]$clusters
+  
+  # Downregulated clusters (lfc < -threshold and log10(pvalue) >= threshold)
+  downregulated_clusters_list[[paste0(condition_name, "_vs_samples_baseline")]] <- stat_result[stat_result$lfc < -th.fc & stat_result$log_pvalue > th.pv, ]$clusters
+  
+  # Print the results
+  cat("\nUpregulated clusters in", paste0(condition_name, " vs. samples_baseline"), ":\n")
+  print(upregulated_clusters_list[[condition_name]])
+  
+  cat("\nDownregulated clusters in", paste0(condition_name, " vs. samples_baseline"), ":\n")
+  print(downregulated_clusters_list[[condition_name]])
+  
+  # Generate volcano plot
+  volcano_plot <- plotVolcano(DataCell,
+                              comparison = paste0(condition_name, " vs. samples_baseline"),
+                              th.pv = th.pv,
+                              th.fc = th.fc,
+                              plot.text = TRUE)
+  
+  # Save plot
+  ggsave(filename = paste0("./03_figures/flowSOM/volcanoplots/volcanoplot_", condition_name, "_vs_samples_baseline.png"),
+         plot = volcano_plot, width = 10, height = 10)
+}
