@@ -18,8 +18,8 @@ upregulated_clusters_list <- list()
 downregulated_clusters_list <- list()
 
 # Set thresholds
-th.pv <- 1.3  # p-value threshold (log10 scale)
-th.fc <- 1.5  # fold change threshold
+th.pv <- 1.3
+th.fc <- 1.5
 
 # Loop through conditions, compute statistics, generate volcano plots, and extract up/downregulated clusters
 for (i in seq_along(list.conditions)) {
