@@ -2,77 +2,63 @@ library("ggplot2")
 library(dplyr)
 
 #Create metaclusters / subsets 
-mc_01 <- c("92", "200", "32", "162", "55", "165", "85", "83", "29", "34", "33", "126", "106", "37", "58")
-mc_02 <- c("11", "164", "64", "47", "22", "84", "31", "117", "116", "130", "39", "2", "49", "159", "10", "26", "62", "51", "102", "168", "53", "59")
-mc_03 <- c("197", "104", "134", "173", "182", "174", "180")
-mc_04 <- c("145", "115", "79", "136", "191", "137", "183", "45", "120", "108", "139", "14", "99", "36", "109", "111", "177", "41", "6", "46", "23", "123", "18", "70", "17", "43")
-mc_05 <- c("156", "8", "135", "175", "138", "52", "122", "61", "150", "30", "82", "149")
-mc_06 <- c("199", "87", "128", "28", "100", "4", "48", "75", "16", "113", "20", "178", "3", "89", "148", "158", "185", "27", "98", "163", "189", "133", "196", "181", "147", "193", "40", "125")
-mc_07 <- c("166", "97", "194", "198", "179", "190", "140", "176", "81", "93", "153", "131", "146", "50", "121", "167", "152", "154")
-mc_08 <- c("107", "132", "65", "118", "143", "54", "88", "101", "155", "77", "169", "96", "142", "86", "144", "15", "171")
-mc_09 <- c("151", "184", "105", "195", "13", "90", "110", "66", "161", "103", "24", "56", "119", "68", "78")
-mc_10 <- c("160", "21", "72", "9", "192", "12", "114", "5", "38", "95", "35", "91", "127", "73", "76", "141", "129", "7", "44", "188", "57", "187")
-mc_11 <- c("69", "170", "42", "71", "124", "1", "60", "25", "157", "63", "80", "172", "74", "94", "67", "186", "19", "112")
+#Create metaclusters / subsets 
+plasmablasts <- c("92", "200", "32", "162", "55", "165", "85", "83", "29", "34", "33", "126", "106", "37", "58", "11", "164", "64", "47", "22", "84", "31", "117", "116", "130", "39", "2", "49", "159", "10", "26", "62", "51", "102", "168", "53", "59")
+temp <- c("197", "104", "134", "173", "182", "174", "180")
+proliferating_B_cells <- c("145", "115", "79", "136", "191", "137", "183", "45")
+exhausted_like_mem_B_cells <- c("120", "108", "139", "14", "99", "36", "109", "111", "177", "41", "6", "46", "23", "123", "18", "70", "17", "43")
+switched_mem_B_cells <- c("156", "8", "135", "175", "138", "52", "122", "61", "150", "30", "82", "149","199", "87", "128", "28", "100", "4", "48", "75", "16", "113", "20", "178", "3", "89", "148", "158", "185", "27", "98", "163", "189", "133", "196", "181", "147", "193", "40", "125")
+non_switched_mem_B_cells <- c("166", "97", "194", "198", "179", "190", "140", "176", "81", "93", "153", "131", "146", "50", "121", "167", "152", "154")
+T1_like_immature_B_cells <- c("107", "132", "65", "118", "143", "54", "88", "101", "155", "77", "169", "96", "142", "86", "144", "15", "171")
+switching_mem_B_cells <- c("151", "184", "105", "195", "13", "90", "110", "66", "161", "103", "24", "56", "119", "68", "78")
+mature_naive_B_cells <- c("160", "21", "72", "9", "192", "12", "114", "5", "38", "95", "35", "91", "127", "73", "76", "141", "129", "7", "44", "188", "57", "187", "69", "170", "42", "71", "124", "1", "60", "25", "157", "63", "80", "172", "74", "94", "67", "186", "19", "112")
 
-mc_list <- list(mc_01 = mc_01, 
-                mc_02 = mc_02, 
-                mc_03 = mc_03, 
-                mc_04 = mc_04, 
-                mc_05 = mc_05, 
-                mc_06 = mc_06, 
-                mc_07 = mc_07, 
-                mc_08 = mc_08, 
-                mc_09 = mc_09, 
-                mc_10 = mc_10, 
-                mc_11 = mc_11)
+mc_list <- list(mc_01 = plasmablasts, 
+                mc_02 = temp, 
+                mc_03 = proliferating_B_cells, 
+                mc_04 = exhausted_like_mem_B_cells, 
+                mc_05 = switched_mem_B_cells, 
+                mc_06 = non_switched_mem_B_cells, 
+                mc_07 = T1_like_immature_B_cells, 
+                mc_08 = switching_mem_B_cells, 
+                mc_09 = mature_naive_B_cells)
 
-assign_metaclusters <- function(subsets_list, metaclusters) {
-  # Create an empty output list
-  output <- list()
-  
-  # Loop through each subset in subsets_list
-  for (subset_name in names(subsets_list)) {
-    # Extract the cluster IDs from this subset
-    subset_clusters <- subsets_list[[subset_name]]
-    
-    # For each cluster, find which metacluster(s) it belongs to
-    df <- data.frame(
-      cluster = subset_clusters,
-      metacluster = sapply(subset_clusters, function(cl) {
-        hits <- names(metaclusters)[
-          sapply(metaclusters, function(mc) cl %in% mc)
-        ]
-        if (length(hits) == 0) {
-          return("None")  # Or NA, if you prefer
-        } else {
-          return(paste(hits, collapse = ","))
-        }
-      }),
-      stringsAsFactors = FALSE
-    )
-    
-    # Store the data frame in the output list
-    output[[subset_name]] <- df
-  }
-  
-  return(output)
+#Create a function to assign metacluster to cluster, using mc_list
+assign_mc <- function(cluster_ids, mc_list) {
+  sapply(cluster_ids, function(cid) {
+    hits <- names(mc_list)[sapply(mc_list, function(v) cid %in% v)]
+    if (length(hits) == 0) {
+      "None"  # or NA
+    } else {
+      paste(hits, collapse = ",")
+    }
+  })
 }
 
-# Assign metaclusters to the list of clusters in each subset of the Euler plots 
-PPD_up_subsets <- assign_metaclusters(PPD_up_subsets, mc_list)
+#loop the function for a given subpart (PBD_down for example)
+for (subset_name in names(PBD_down_subsets)) {
+  cluster_ids <- PBD_down_subsets[[subset_name]]
+    # if it's NULL, skip or decide how you want to handle it
+    if (is.null(cluster_ids)) {
+    next
+    }
+    # Update the same element with assigned metaclusters
+    PBD_down_subsets[[subset_name]] <- assign_mc(cluster_ids, mc_list)
+    }
+
 
 #Bubble plot 
 ## Prepare timepoints of interest
-timepoints <- c("PPD03", "PPD08", "PPD14", "PPD57")
+timepoints_PPD <- c("PPD03", "PPD08", "PPD14", "PPD57")
+timepoints_PBD <- c("PBD03", "PBD08", "PBD14", "PBD28")
 
-## Create one combined data frame of counts
-df_counts <- bind_rows(lapply(timepoints, function(tp) {
-  # Extract the data frame for this timepoint from PPD_up_subsets
-  df_tp <- PPD_up_subsets[[tp]]
+## Create one combined data frame of counts for a given subpart (PBD_down for ex)
+df_counts <- bind_rows(lapply(timepoints_PBD, function(tp) {
+  # Grab the vector of metaclusters for this timepoint
+  metaclusters_vec <- PBD_down_subsets[[tp]]
   
-  # If empty, return a minimal row or an empty data frame
-  if (nrow(df_tp) == 0) {
-    # Return an empty data frame with the same column structure
+  # If it's NULL or empty, return an empty data frame
+  if (is.null(metaclusters_vec) || length(metaclusters_vec) == 0) {
     return(data.frame(
       metacluster = character(0),
       freq = integer(0),
@@ -80,19 +66,36 @@ df_counts <- bind_rows(lapply(timepoints, function(tp) {
     ))
   }
   
-  # Summarize the number of clusters in each metacluster
-  df_agg <- df_tp %>%
+  # Convert to a data frame, count how many times each metacluster appears
+  df_tp <- data.frame(metacluster = metaclusters_vec) %>%
     group_by(metacluster) %>%
     summarise(freq = n(), .groups = "drop") %>%
     mutate(timepoint = tp)
   
-  df_agg
+  return(df_tp)
 }))
 
+#Add new column in df for labels of metaclusters  
+mc_labels <- list("mc_01" = "plasmablasts", 
+                "mc_02" = "temp", 
+                "mc_03" = "proliferating_B_cells", 
+                "mc_05" = "switched_mem_B_cells", 
+                "mc_04" = "exhausted_like_mem_B_cells", 
+                "mc_06" = "non_switched_mem_B_cells", 
+                "mc_07" = "T1_like_immature_B_cells", 
+                "mc_08" = "switching_mem_B_cells", 
+                "mc_09" = "mature_naive_B_cells")
 
-#Bubble plot
-ggplot(df_counts, aes(x = timepoint, y = metacluster, size = freq)) +
-  geom_point() +
+df_counts$metacluster_label <- ifelse(
+  df_counts$metacluster %in% names(mc_labels),
+  mc_labels[df_counts$metacluster],
+  df_counts$metacluster
+)
+df_counts$metacluster_label <- unlist(df_counts$metacluster_label)
+
+#Bubble plot for a given subpart (PBD_down for ex)
+ggplot(df_counts, aes(x = timepoint, y = metacluster_label, size = freq)) +
+  geom_point(color = "red") +
   scale_size_area(max_size = 10) +  # Adjust max bubble size as needed
   theme_minimal() +
   labs(
@@ -105,3 +108,4 @@ ggplot(df_counts, aes(x = timepoint, y = metacluster, size = freq)) +
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.grid.major = element_line(color = "grey85")
   )
+
