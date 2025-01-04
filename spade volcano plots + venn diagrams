@@ -107,7 +107,7 @@ upregulated_clusters_PB = list(
   PBD03 = upregulated_clusters$PBD03,
   PBD08 = upregulated_clusters$PBD08,
   PBD14 = upregulated_clusters$PBD14,
-  PBD57 = upregulated_clusters$PBD57)
+  PBD28 = upregulated_clusters$PBD28)
 
 downregulated_clusters_PP = list(
   PPD03 = downregulated_clusters$PPD03,
@@ -119,7 +119,7 @@ downregulated_clusters_PB = list(
   PBD03 = downregulated_clusters$PBD03,
   PBD08 = downregulated_clusters$PBD08,
   PBD14 = downregulated_clusters$PBD14,
-  PBD57 = downregulated_clusters$PBD57)
+  PBD28 = downregulated_clusters$PBD28)
 
 #save and load results
 load("./07_rsave/spade/upregulated_clusters.Rsave")
