@@ -56,7 +56,7 @@ DataCell <- identifyClusters(DataCell,
                              space = "markers",
                              markers = markers,
                              method = "FlowSOM",
-                             nClus = 200,
+                             nClus = 180,
                              xdim = 20,
                              ydim = 20)
 
