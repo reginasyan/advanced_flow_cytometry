@@ -1,3 +1,7 @@
+library(ggplot2)
+library(dplyr)
+library(eulerr)
+
 # Eulerplot
 # Create lists of upregulated and downregulated clusters for PP and PB groups vs baseline
 upregulated_clusters_PP_vs_baseline = list(
