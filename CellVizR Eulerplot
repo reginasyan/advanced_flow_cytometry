@@ -1,0 +1,80 @@
+# Eulerplot
+par(oma = c(2, 0, 3, 0)) 
+euler_plot <- plot(euler(upregulated_clusters_PP_vs_baseline),
+                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
+                   edges = TRUE,
+                   legend = TRUE,
+                   labels = identical(legend, TRUE),
+                   quantities = TRUE,
+                   strips = NULL,
+                   main = "Upregulated clusters PP vs baseline",
+                   n = 200L,
+                   cex.main = 1.5,
+                   cex.lab = 2,
+                   cex.axis = 1.1,
+                   cex.legend = 2)
+mtext("Upregulated clusters PP vs baseline", side = 3, line = 3, cex = 1.5)
+
+png("./03_figures/eulerplots/upregulated_clusters_PP_vs_baseline.png", width = 3000, height = 3000, res = 350)
+plot(euler_plot)
+dev.off()
+
+par(oma = c(2, 0, 3, 0)) 
+euler_plot <- plot(euler(upregulated_clusters_PB_vs_baseline),
+                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
+                   edges = TRUE,
+                   legend = TRUE,
+                   labels = identical(legend, TRUE),
+                   quantities = TRUE,
+                   strips = NULL,
+                   main = "Upregulated clusters PB vs baseline",
+                   n = 200L,
+                   cex.main = 1.5,
+                   cex.lab = 2,
+                   cex.axis = 1.1,
+                   cex.legend = 2)
+mtext("Upregulated clusters PB vs baseline", side = 3, line = 3, cex = 1.5)
+
+png("./03_figures/eulerplots/upregulated_clusters_PB_vs_baseline.png", width = 3000, height = 3000, res = 350)
+plot(euler_plot)
+dev.off()
+
+par(oma = c(2, 0, 3, 0)) 
+euler_plot <- plot(euler(downregulated_clusters_PP_vs_baseline),
+                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
+                   edges = TRUE,
+                   legend = TRUE,
+                   labels = identical(legend, TRUE),
+                   quantities = TRUE,
+                   strips = NULL,
+                   main = "Downregulated clusters PP vs baseline",
+                   n = 200L,
+                   cex.main = 1.5,
+                   cex.lab = 2,
+                   cex.axis = 1.1,
+                   cex.legend = 2)
+mtext("Downregulated clusters PP vs baseline", side = 3, line = 3, cex = 1.5)
+
+png("./03_figures/eulerplots/downregulated_clusters_PP_vs_baseline.png", width = 3000, height = 3000, res = 350)
+plot(euler_plot)
+dev.off()
+
+par(oma = c(2, 0, 3, 0)) 
+euler_plot <- plot(euler(downregulated_clusters_PB_vs_baseline),
+                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
+                   edges = TRUE,
+                   legend = TRUE,
+                   labels = identical(legend, TRUE),
+                   quantities = TRUE,
+                   strips = NULL,
+                   main = "Downregulated clusters PB vs baseline",
+                   n = 200L,
+                   cex.main = 1.5,
+                   cex.lab = 2,
+                   cex.axis = 1.1,
+                   cex.legend = 2)
+mtext("Downregulated clusters PB vs baseline", side = 3, line = 3, cex = 1.5)
+
+png("./03_figures/eulerplots/downregulated_clusters_PB_vs_baseline.png", width = 3000, height = 3000, res = 350)
+plot(euler_plot)
+dev.off()
