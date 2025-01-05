@@ -1,4 +1,4 @@
-library("CellVizR")
+library(CellVizR)
 
 setwd("~/Desktop/Master 2/Cytometry_Workshop/Project/Project_CellVizR_UMAP_FlowSOM/")
 
