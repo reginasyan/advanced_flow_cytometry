@@ -1,119 +1,89 @@
 library(ggplot2)
 library(eulerr)
 
-# Define a function to remove empty clusters
+# Function to remove empty clusters
 remove_empty_clusters <- function(cluster_list) {
   cluster_list[sapply(cluster_list, function(x) length(x) > 0)]
 }
 
-# Create lists of upregulated and downregulated clusters for PP and PB groups vs baseline
-upregulated_clusters_PP_vs_baseline = list(
+# Function to create and save Euler plots
+create_euler_plot <- function(cluster_list, plot_title, output_path) {
+  # Open PNG device
+  png(output_path, width = 3000, height = 3000, res = 350)
+  # Euler plots
+  euler_plot <- plot(
+    euler(cluster_list),
+    fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
+    edges = TRUE,
+    legend = TRUE,
+    labels = FALSE,
+    quantities = TRUE,
+    main = plot_title,
+    cex.main = 1.5,
+    cex.lab = 2,
+    cex.axis = 1.1,
+    cex.legend = 2
+  )
+  plot(euler_plot)
+  dev.off()
+}
+
+# Define cluster lists
+upregulated_clusters_PP_vs_baseline <- list(
   PPD03 = upregulated_clusters_list$samples_PPD03_vs_samples_baseline,
   PPD08 = upregulated_clusters_list$samples_PPD08_vs_samples_baseline,
   PPD14 = upregulated_clusters_list$samples_PPD14_vs_samples_baseline,
-  PPD57 = upregulated_clusters_list$samples_PPD57_vs_samples_baseline)
+  PPD57 = upregulated_clusters_list$samples_PPD57_vs_samples_baseline
+)
 
-upregulated_clusters_PB_vs_baseline = list(
+upregulated_clusters_PB_vs_baseline <- list(
   PBD03 = upregulated_clusters_list$samples_PBD03_vs_samples_baseline,
   PBD08 = upregulated_clusters_list$samples_PBD08_vs_samples_baseline,
   PBD14 = upregulated_clusters_list$samples_PBD14_vs_samples_baseline,
-  PBD28 = upregulated_clusters_list$samples_PBD28_vs_samples_baseline)
+  PBD28 = upregulated_clusters_list$samples_PBD28_vs_samples_baseline
+)
 
-downregulated_clusters_PP_vs_baseline = list(
+downregulated_clusters_PP_vs_baseline <- list(
   PPD03 = downregulated_clusters_list$samples_PPD03_vs_samples_baseline,
   PPD08 = downregulated_clusters_list$samples_PPD08_vs_samples_baseline,
   PPD14 = downregulated_clusters_list$samples_PPD14_vs_samples_baseline,
-  PPD57 = downregulated_clusters_list$samples_PPD57_vs_samples_baseline)
+  PPD57 = downregulated_clusters_list$samples_PPD57_vs_samples_baseline
+)
 
-downregulated_clusters_PB_vs_baseline = list(
+downregulated_clusters_PB_vs_baseline <- list(
   PBD03 = downregulated_clusters_list$samples_PBD03_vs_samples_baseline,
   PBD08 = downregulated_clusters_list$samples_PBD08_vs_samples_baseline,
   PBD14 = downregulated_clusters_list$samples_PBD14_vs_samples_baseline,
-  PBD28 = downregulated_clusters_list$samples_PBD28_vs_samples_baseline)
+  PBD28 = downregulated_clusters_list$samples_PBD28_vs_samples_baseline
+)
 
-# Apply empty cluster check and remove them from the four lists
+# Remove empty clusters
 upregulated_clusters_PP_vs_baseline <- remove_empty_clusters(upregulated_clusters_PP_vs_baseline)
 upregulated_clusters_PB_vs_baseline <- remove_empty_clusters(upregulated_clusters_PB_vs_baseline)
 downregulated_clusters_PP_vs_baseline <- remove_empty_clusters(downregulated_clusters_PP_vs_baseline)
 downregulated_clusters_PB_vs_baseline <- remove_empty_clusters(downregulated_clusters_PB_vs_baseline)
 
-# Create eulerplots
-par(oma = c(2, 0, 3, 0)) 
-euler_plot <- plot(euler(upregulated_clusters_PP_vs_baseline),
-                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
-                   edges = TRUE,
-                   legend = TRUE,
-                   labels = identical(legend, TRUE),
-                   quantities = TRUE,
-                   strips = NULL,
-                   main = "Upregulated clusters PP vs baseline",
-                   n = 200L,
-                   cex.main = 1.5,
-                   cex.lab = 2,
-                   cex.axis = 1.1,
-                   cex.legend = 2)
-mtext("Upregulated clusters PP vs baseline", side = 3, line = 3, cex = 1.5)
+# Create and save Euler plots
+create_euler_plot(
+  cluster_list = upregulated_clusters_PP_vs_baseline,
+  plot_title = "Upregulated clusters PP vs baseline",
+  output_path = "./03_figures/eulerplot/upregulated_clusters_PP_vs_baseline.png"
+)
 
-png("./03_figures/eulerplots/upregulated_clusters_PP_vs_baseline.png", width = 3000, height = 3000, res = 350)
-plot(euler_plot)
-dev.off()
+create_euler_plot(
+  cluster_list = upregulated_clusters_PB_vs_baseline,
+  plot_title = "Upregulated clusters PB vs baseline",
+  output_path = "./03_figures/eulerplot/upregulated_clusters_PB_vs_baseline.png"
+)
 
-par(oma = c(2, 0, 3, 0)) 
-euler_plot <- plot(euler(upregulated_clusters_PB_vs_baseline),
-                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
-                   edges = TRUE,
-                   legend = TRUE,
-                   labels = identical(legend, TRUE),
-                   quantities = TRUE,
-                   strips = NULL,
-                   main = "Upregulated clusters PB vs baseline",
-                   n = 200L,
-                   cex.main = 1.5,
-                   cex.lab = 2,
-                   cex.axis = 1.1,
-                   cex.legend = 2)
-mtext("Upregulated clusters PB vs baseline", side = 3, line = 3, cex = 1.5)
+create_euler_plot(
+  cluster_list = downregulated_clusters_PP_vs_baseline,
+  plot_title = "Downregulated clusters PP vs baseline",
+  output_path = "./03_figures/eulerplot/downregulated_clusters_PP_vs_baseline.png"
+)
 
-png("./03_figures/eulerplots/upregulated_clusters_PB_vs_baseline.png", width = 3000, height = 3000, res = 350)
-plot(euler_plot)
-dev.off()
-
-par(oma = c(2, 0, 3, 0)) 
-euler_plot <- plot(euler(downregulated_clusters_PP_vs_baseline),
-                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
-                   edges = TRUE,
-                   legend = TRUE,
-                   labels = identical(legend, TRUE),
-                   quantities = TRUE,
-                   strips = NULL,
-                   main = "Downregulated clusters PP vs baseline",
-                   n = 200L,
-                   cex.main = 1.5,
-                   cex.lab = 2,
-                   cex.axis = 1.1,
-                   cex.legend = 2)
-mtext("Downregulated clusters PP vs baseline", side = 3, line = 3, cex = 1.5)
-
-png("./03_figures/eulerplots/downregulated_clusters_PP_vs_baseline.png", width = 3000, height = 3000, res = 350)
-plot(euler_plot)
-dev.off()
-
-par(oma = c(2, 0, 3, 0)) 
-euler_plot <- plot(euler(downregulated_clusters_PB_vs_baseline),
-                   fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
-                   edges = TRUE,
-                   legend = TRUE,
-                   labels = identical(legend, TRUE),
-                   quantities = TRUE,
-                   strips = NULL,
-                   main = "Downregulated clusters PB vs baseline",
-                   n = 200L,
-                   cex.main = 1.5,
-                   cex.lab = 2,
-                   cex.axis = 1.1,
-                   cex.legend = 2)
-mtext("Downregulated clusters PB vs baseline", side = 3, line = 3, cex = 1.5)
-
-png("./03_figures/eulerplots/downregulated_clusters_PB_vs_baseline.png", width = 3000, height = 3000, res = 350)
-plot(euler_plot)
-dev.off()
+create_euler_plot(
+  cluster_list = downregulated_clusters_PB_vs_baseline,
+  plot_title = "Downregulated clusters PB vs baseline",
+  output_path = "./03_figures/eulerplot/downregulated_clusters_PB_vs_baseline.png"
+)
