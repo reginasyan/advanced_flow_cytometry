@@ -1,3 +1,6 @@
+library(CellVizR)
+library(ggplot2)
+
 # Differential analysis (volcanoplots)
 # Initialize statistic slot
 DataCell@statistic <- data.frame()
