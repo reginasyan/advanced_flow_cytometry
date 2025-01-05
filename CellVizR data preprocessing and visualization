@@ -73,12 +73,12 @@ plotClustersCounts(DataCell,
                    sort = TRUE)
 
 # Save and load
-save(DataCell,file = "./05_rsave/DataCell_FlowSOM_200C.Rsave")
+save(DataCell,file = "./05_rsave/DataCell_FlowSOM_180C.Rsave")
 load("./05_rsave/DataCell_FlowSOM_180C.Rsave")
 
 # Cluster quality control
 # Small clusters
-png("./03_figures/QCSplots/QCSplot_UMAP_FlowSOM_200C_size50.png", width = 3000, height = 6000, res = 300)
+png("./03_figures/QCSplots/QCSplot_UMAP_FlowSOM_180C_size50.png", width = 3000, height = 6000, res = 300)
 QCS <- QCSmallClusters(DataCell,
                        th.size = 50, 
                        plot.device = TRUE)
