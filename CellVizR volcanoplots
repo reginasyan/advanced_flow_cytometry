@@ -1,4 +1,4 @@
-# Differential analysis
+# Differential analysis (volcanoplots)
 # Initialize statistic slot
 DataCell@statistic <- data.frame()
 all_stat_results <- data.frame()
