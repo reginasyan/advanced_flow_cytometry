@@ -1,0 +1,99 @@
+library("CellVizR")
+
+setwd("~/Desktop/Master 2/Cytometry_Workshop/Project/Project_CellVizR_UMAP_FlowSOM/")
+
+files <- list.files("./02_data/", 
+                    pattern = "fcs",
+                    full.names = TRUE)
+
+# Import the FCS files into a Celldata object 
+DataCell <- import(files, 
+                   filetype = "fcs", 
+                   transform = "arcsinh",
+                   exclude.markers = c("Cell_length","Dead","Beads","Cells","CD38","HLADR","CD14","CD62L","Bcl-6","IgD","B5R","CD195","CD138","CD95","TNFa","IL10"),
+                   d.method = "uniform",
+                   parameters.method = list("target.percent" = 0.1))
+
+# Retrieving of the marker names
+QCN <- QCMarkerNames(files)
+colnames(QCN)[-1]
+print(DataCell)
+
+plot = QCMarkerRanges(files)
+
+plot <- ggiraph::girafe(ggobj = plot,
+                        options = list(ggiraph::opts_sizing(width = .9),
+                                       ggiraph::opts_hover_inv(css = "opacity:0.6;"),
+                                       ggiraph::opts_hover(css = "fill:black;")))
+
+plot
+
+# Metadata
+metadata <- data.frame(individual = gsub("\\.fcs", "", basename(files)))
+metadata$condition <- sapply(strsplit(metadata$individual, "_"), function(x) x[1])
+metadata$individual <- sapply(strsplit(metadata$individual, "_"), function(x) x[2])
+rownames(metadata) <- paste(metadata$condition, metadata$individual, sep = "_")
+DataCell <- assignMetadata(DataCell, metadata = metadata)
+
+# Perform manifold
+DataCell <- generateManifold(DataCell,
+                             method = "UMAP", 
+                             n_neighbors = 15,
+                             n_components = 2,
+                             metric = "euclidean",
+                             n_epochs = NULL,
+                             n_threads = 1, 
+                             n_sgd_threads = 1,
+                             scale = FALSE)
+plotManifold(DataCell, 
+             markers = "density",
+             samples = NULL,
+             downsampling = 20000)
+
+# FlowSOM
+markers <- colnames(DataCell@matrix.expression)
+DataCell <- identifyClusters(DataCell,
+                             space = "markers",
+                             markers = markers,
+                             method = "FlowSOM",
+                             nClus = 200,
+                             xdim = 20,
+                             ydim = 20)
+
+plotClustersCounts(DataCell, 
+                   clusters = NULL,
+                   sort = TRUE)
+
+# Save and load
+save(DataCell,file = "./05_rsave/DataCell_FlowSOM_200C.Rsave")
+load("./05_rsave/DataCell_FlowSOM_180C.Rsave")
+
+# Cluster quality control
+# Small clusters
+png("./03_figures/QCSplots/QCSplot_UMAP_FlowSOM_200C_size50.png", width = 3000, height = 6000, res = 300)
+QCS <- QCSmallClusters(DataCell,
+                       th.size = 50, 
+                       plot.device = TRUE)
+dev.off()
+
+# Uniform clusters
+png("./03_figures/QCUplots/QCUplot_UMAP_FlowSOM_180C.png", width = 3000, height = 6000, res = 300)
+QCU <- QCUniformClusters(DataCell,
+                         uniform.test = "both",
+                         th.pvalue = 0.05,
+                         th.IQR = 2,
+                         plot.device = TRUE)
+dev.off()
+
+# Clusters' plot
+png("./03_figures/manifoldplots/manifoldplot_UMAP_FlowSOM_180C.png", width = 3000, height = 3000, res = 300)
+plotManifold(DataCell, markers = "clusters", downsampling = 20000) + 
+  ggplot2::guides(color = "none")
+dev.off()
+
+# Heatmap
+png("./03_figures/heatmaps/heatmap_UMAP_FlowSOM_180C_10MC.png", width = 8000, height = 3000, res = 300)
+hm.exp <- plotHmExpressions(DataCell, 
+                            metaclusters = 10)
+plot(hm.exp)
+dev.off()
