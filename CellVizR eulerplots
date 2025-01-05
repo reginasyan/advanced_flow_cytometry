@@ -9,10 +9,10 @@ remove_empty_clusters <- function(cluster_list) {
 
 # Create lists of upregulated and downregulated clusters for PP and PB groups vs baseline
 upregulated_clusters_PP_vs_baseline = list(
-  samples_PPD03_vs_samples_baseline = upregulated_clusters_list$samples_PPD03_vs_samples_baseline,
-  samples_PPD08_vs_samples_baseline = upregulated_clusters_list$samples_PPD08_vs_samples_baseline,
-  samples_PPD14_vs_samples_baseline = upregulated_clusters_list$samples_PPD14_vs_samples_baseline,
-  samples_PPD57_vs_samples_baseline = upregulated_clusters_list$samples_PPD57_vs_samples_baseline)
+  PPD03 = upregulated_clusters_list$samples_PPD03_vs_samples_baseline,
+  PPD08 = upregulated_clusters_list$samples_PPD08_vs_samples_baseline,
+  PPD14 = upregulated_clusters_list$samples_PPD14_vs_samples_baseline,
+  PPD57 = upregulated_clusters_list$samples_PPD57_vs_samples_baseline)
 
 upregulated_clusters_PB_vs_baseline = list(
   PBD03 = upregulated_clusters_list$samples_PBD03_vs_samples_baseline,
