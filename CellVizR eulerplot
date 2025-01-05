@@ -1,4 +1,4 @@
-# Eulerplot
+# Eulerplot    
 par(oma = c(2, 0, 3, 0)) 
 euler_plot <- plot(euler(upregulated_clusters_PP_vs_baseline),
                    fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
