@@ -76,6 +76,16 @@ plotClustersCounts(DataCell,
 save(DataCell,file = "./05_rsave/DataCell_FlowSOM_180C.Rsave")
 load("./05_rsave/DataCell_FlowSOM_180C.Rsave")
 
+# Extract metadata data
+metadata <- DataCell@metadata
+
+# Convert the 'condition' column to a factor and set the desired order
+metadata$condition <- factor(metadata$condition, levels = c("BPD19", "PPD03", "PPD08", "PPD14", "PPD28", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28"))
+
+# Ensure the sample order matches the order of 'condition'
+metadata <- metadata[order(metadata$condition), ]
+DataCell@metadata <- metadata
+
 # Cluster quality control
 # Small clusters
 png("./03_figures/QCSplots/QCSplot_UMAP_FlowSOM_180C_size50.png", width = 3000, height = 6000, res = 300)
