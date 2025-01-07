@@ -86,7 +86,7 @@ plot_bubble_chart <- function(cluster_list, df_cluster_to_mc, output_file, title
       # Append to the main table
       df_count$condition <- condition_short
       
-      # 合并到总表
+      # Merge into the main dataframe
       df_bubble <- rbind(df_bubble, df_count)
     } else {
       # If clusters are empty, log the information
