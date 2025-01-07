@@ -61,14 +61,14 @@ plot_bubble_chart <- function(cluster_list, df_cluster_to_mc, output_file, title
     # Check if clusters are empty
     if (length(clusters) > 0) {
       # Match the significantly changed clusters with the cluster-to-metacluster mapping table
-      df_up <- merge(
+      df_change <- merge(
         x  = data.frame(cluster = clusters, stringsAsFactors = FALSE),
         y  = df_cluster_to_mc,
         by = "cluster"
       )
       
       # Count the number of clusters in each metacluster
-      df_count <- df_up %>%
+      df_count <- df_change %>%
         group_by(metacluster) %>%
         summarise(n_up = n()) %>%
         ungroup()
