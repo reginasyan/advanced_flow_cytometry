@@ -2,7 +2,6 @@ library("ggplot2")
 library(dplyr)
 
 #Create metaclusters / subsets 
-#Create metaclusters / subsets 
 plasmablasts <- c("92", "200", "32", "162", "55", "165", "85", "83", "29", "34", "33", "126", "106", "37", "58", "11", "164", "64", "47", "22", "84", "31", "117", "116", "130", "39", "2", "49", "159", "10", "26", "62", "51", "102", "168", "53", "59")
 temp <- c("197", "104", "134", "173", "182", "174", "180")
 proliferating_B_cells <- c("145", "115", "79", "136", "191", "137", "183", "45")
@@ -36,26 +35,27 @@ assign_mc <- function(cluster_ids, mc_list) {
 }
 
 #loop the function for a given subpart (PBD_down for example)
-for (subset_name in names(PBD_down_subsets)) {
-  cluster_ids <- PBD_down_subsets[[subset_name]]
+for (subset_name in names(PBD_up_subsets)) {
+  cluster_ids <- PBD_up_subsets[[subset_name]]
     # if it's NULL, skip or decide how you want to handle it
     if (is.null(cluster_ids)) {
     next
     }
     # Update the same element with assigned metaclusters
-    PBD_down_subsets[[subset_name]] <- assign_mc(cluster_ids, mc_list)
+  PBD_up_subsets[[subset_name]] <- assign_mc(cluster_ids, mc_list)
     }
 
 
 #Bubble plot 
 ## Prepare timepoints of interest
+timepoints <- c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
 timepoints_PPD <- c("PPD03", "PPD08", "PPD14", "PPD57")
 timepoints_PBD <- c("PBD03", "PBD08", "PBD14", "PBD28")
 
-## Create one combined data frame of counts for a given subpart (PBD_down for ex)
-df_counts <- bind_rows(lapply(timepoints_PBD, function(tp) {
+## Create one combined data frame of counts for a given subpart (PPD_up for ex)
+df_counts_pbd_up <- bind_rows(lapply(timepoints_PPD, function(tp) {
   # Grab the vector of metaclusters for this timepoint
-  metaclusters_vec <- PBD_down_subsets[[tp]]
+  metaclusters_vec <- PPD_up_subsets[[tp]]
   
   # If it's NULL or empty, return an empty data frame
   if (is.null(metaclusters_vec) || length(metaclusters_vec) == 0) {
@@ -76,6 +76,7 @@ df_counts <- bind_rows(lapply(timepoints_PBD, function(tp) {
 }))
 
 #Add new column in df for labels of metaclusters  
+##create a list of labels
 mc_labels <- list("mc_01" = "plasmablasts", 
                 "mc_02" = "temp", 
                 "mc_03" = "proliferating_B_cells", 
@@ -86,20 +87,24 @@ mc_labels <- list("mc_01" = "plasmablasts",
                 "mc_08" = "switching_mem_B_cells", 
                 "mc_09" = "mature_naive_B_cells")
 
+#add the corresponding labels
 df_counts$metacluster_label <- ifelse(
   df_counts$metacluster %in% names(mc_labels),
   mc_labels[df_counts$metacluster],
   df_counts$metacluster
 )
+#unlist the labels to prepare for plotting
 df_counts$metacluster_label <- unlist(df_counts$metacluster_label)
 
-#Bubble plot for a given subpart (PBD_down for ex)
+
+#Bubble plot for a given subpart (df_counts)
 ggplot(df_counts, aes(x = timepoint, y = metacluster_label, size = freq)) +
-  geom_point(color = "red") +
+  geom_point(aes(size = freq, color = freq)) +
   scale_size_area(max_size = 10) +  # Adjust max bubble size as needed
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
   theme_minimal() +
   labs(
-    title = "Upregulated Metaclusters by Timepoint",
+    title = "Downregulated Metaclusters PB",
     x = "Timepoint",
     y = "Metacluster",
     size = "Number of Clusters"
@@ -109,3 +114,57 @@ ggplot(df_counts, aes(x = timepoint, y = metacluster_label, size = freq)) +
     panel.grid.major = element_line(color = "grey85")
   )
 
+
+
+#####Other df
+df_counts_pbd_down <- bind_rows(lapply(timepoints_PBD, function(tp) {
+  # Grab the vector of metaclusters for this timepoint
+  metaclusters_vec <- PBD_down_subsets[[tp]]
+  
+  # If it's NULL or empty, return an empty data frame
+  if (is.null(metaclusters_vec) || length(metaclusters_vec) == 0) {
+    return(data.frame(
+      metacluster = character(0),
+      freq = integer(0),
+      timepoint = character(0)
+    ))
+  }
+  
+  # Convert to a data frame, count how many times each metacluster appears
+  df_tp <- data.frame(metacluster = metaclusters_vec) %>%
+    group_by(metacluster) %>%
+    summarise(freq = n(), .groups = "drop") %>%
+    mutate(timepoint = tp)
+  
+  return(df_tp)
+}))
+df_counts_pbd_down$metacluster_label <- ifelse(
+  df_counts_pbd_down$metacluster %in% names(mc_labels),
+  mc_labels[df_counts_pbd_down$metacluster],
+  df_counts_pbd_down$metacluster
+)
+df_counts_pbd_down$metacluster_label <- unlist(df_counts_pbd_down$metacluster_label)
+
+#merge dfs
+df_counts_up <- bind_rows(df_counts_ppd_up, df_counts_pbd_up)
+df_counts_down <- bind_rows(df_counts_ppd_down, df_counts_pbd_down)
+
+
+#bubble plot merged
+ggplot(df_counts_down, aes(x = timepoint, y = metacluster_label, size = freq)) +
+  geom_point(aes(size = freq, color = freq)) +
+  scale_size_area(max_size = 10) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  scale_x_discrete(limits = c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")) +
+  theme_minimal() +
+  labs(
+    title = "Downregulated Metaclusters",
+    x = "Timepoint",
+    y = "Metacluster",
+    size = "Number of Clusters",
+    color = "Number of Clusters"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_line(color = "grey85")
+  )
