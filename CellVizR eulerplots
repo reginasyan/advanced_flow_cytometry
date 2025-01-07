@@ -67,23 +67,23 @@ downregulated_clusters_PB_vs_baseline <- remove_empty_clusters(downregulated_clu
 create_euler_plot(
   cluster_list = upregulated_clusters_PP_vs_baseline,
   plot_title = "Upregulated clusters PP vs baseline",
-  output_path = "./03_figures/eulerplot/upregulated_clusters_PP_vs_baseline.png"
+  output_path = "./03_figures/eulerplots/upregulated_clusters_PP_vs_baseline.png"
 )
 
 create_euler_plot(
   cluster_list = upregulated_clusters_PB_vs_baseline,
   plot_title = "Upregulated clusters PB vs baseline",
-  output_path = "./03_figures/eulerplot/upregulated_clusters_PB_vs_baseline.png"
+  output_path = "./03_figures/eulerplots/upregulated_clusters_PB_vs_baseline.png"
 )
 
 create_euler_plot(
   cluster_list = downregulated_clusters_PP_vs_baseline,
   plot_title = "Downregulated clusters PP vs baseline",
-  output_path = "./03_figures/eulerplot/downregulated_clusters_PP_vs_baseline.png"
+  output_path = "./03_figures/eulerplots/downregulated_clusters_PP_vs_baseline.png"
 )
 
 create_euler_plot(
   cluster_list = downregulated_clusters_PB_vs_baseline,
   plot_title = "Downregulated clusters PB vs baseline",
-  output_path = "./03_figures/eulerplot/downregulated_clusters_PB_vs_baseline.png"
+  output_path = "./03_figures/eulerplots/downregulated_clusters_PB_vs_baseline.png"
 )
