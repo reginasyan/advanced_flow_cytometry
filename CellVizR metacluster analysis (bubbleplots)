@@ -2,7 +2,7 @@ library(ggplot2)    
 library(dplyr)    
 
 # Create Metaclusters
-# 1) Define clusters for each metacluster
+# 1) Define clusters for each metacluster 
 metaclusters <- list(
   "1"  = c("119", "109", "110", "120", "100", "86", "88", "108", "98", "99", "87"),
   "2"  = c("122", "121", "112", "153", "101", "111", "102", "91", "89", "103", "104", 
@@ -70,7 +70,7 @@ plot_bubble_chart <- function(cluster_list, df_cluster_to_mc, output_file, title
       # Count the number of clusters in each metacluster
       df_count <- df_change %>%
         group_by(metacluster) %>%
-        summarise(n_up = n()) %>%
+        summarise(n_change = n()) %>%
         ungroup()
       
       # Complete missing metaclusters
@@ -81,7 +81,7 @@ plot_bubble_chart <- function(cluster_list, df_cluster_to_mc, output_file, title
         by = "metacluster",
         all.x = TRUE
       )
-      df_count$n_up[is.na(df_count$n_up)] <- 0
+      df_count$n_change[is.na(df_count$n_change)] <- 0
       
       # Append to the main table
       df_count$condition <- condition_short
@@ -110,15 +110,15 @@ plot_bubble_chart <- function(cluster_list, df_cluster_to_mc, output_file, title
   bubble_plot <- ggplot(df_bubble, aes(
     x     = condition, 
     y     = metacluster, 
-    size  = n_up,
-    color = n_up
+    size  = n_change,
+    color = n_change
   )) +
     geom_point(alpha = 0.8) +
     scale_size(range = c(1, 10)) +
     scale_color_gradient(low = "lightpink", high = "red") +
     labs(
       title = paste(title_prefix, "Conditions"),
-      x     = "Condition", 
+      x     = "Condition",  
       y     = "Metacluster",
       size  = "N of Clusters",
       color = "N of Clusters"
