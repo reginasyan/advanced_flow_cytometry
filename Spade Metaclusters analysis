@@ -22,6 +22,11 @@ mc_list <- list(mc_01 = plasmablasts,
                 mc_08 = switching_mem_B_cells, 
                 mc_09 = mature_naive_B_cells)
 
+mc_sizes <- data.frame(
+  metacluster = names(mc_list),
+  total_clusters = sapply(mc_list, length)
+)
+
 ## Prepare timepoints of interest
 timepoints <- c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
 timepoints_PPD <- c("PPD03", "PPD08", "PPD14", "PPD57")
@@ -74,6 +79,7 @@ df_ppd_up <- bind_rows(lapply(timepoints_PPD, function(tp) {
   return(df_tp)
 }))
 
+
 #Add new column in df for labels of metaclusters  
 ##create a list of labels
 mc_labels <- list("mc_01" = "plasmablasts", 
@@ -92,12 +98,17 @@ df_ppd_up$metacluster_label <- ifelse(
   mc_labels[df_ppd_up$metacluster],
   df_ppd_up$metacluster
 )
-#unlist the labels to prepare for plotting
+# unlist the labels to prepare for plotting
 df_ppd_up$metacluster_label <- unlist(df_ppd_up$metacluster_label)
+# add the total number of clusters for each mc in another column 
+df_ppd_up <- df_ppd_up %>%
+  left_join(mc_sizes, by = "metacluster")
+# add relative abundance in another column
+df_ppd_up <- df_ppd_up %>%
+  mutate(rel_freq = freq / total_clusters)
 
-
-#####Other df
-#PPD down
+#####Other dfs
+###PPD down
 df_ppd_down <- bind_rows(lapply(timepoints_PPD, function(tp) {
   # Grab the vector of metaclusters for this timepoint
   metaclusters_vec <- downregulated_clusters_PP[[tp]]
@@ -122,7 +133,12 @@ df_ppd_down$metacluster_label <- ifelse(
   df_ppd_down$metacluster
 )
 df_ppd_down$metacluster_label <- unlist(df_ppd_down$metacluster_label)
-#PBD up 
+df_ppd_down <- df_ppd_down %>%
+  left_join(mc_sizes, by = "metacluster")
+df_ppd_down <- df_ppd_down %>%
+  mutate(rel_freq = freq / total_clusters)
+
+###PBD up 
 df_pbd_up <- bind_rows(lapply(timepoints_PBD, function(tp) {
   # Grab the vector of metaclusters for this timepoint
   metaclusters_vec <- upregulated_clusters_PB[[tp]]
@@ -147,7 +163,12 @@ df_pbd_up$metacluster_label <- ifelse(
   df_pbd_up$metacluster
 )
 df_pbd_up$metacluster_label <- unlist(df_pbd_up$metacluster_label)
-#PBD down 
+df_pbd_up <- df_pbd_up %>%
+  left_join(mc_sizes, by = "metacluster")
+df_pbd_up <- df_pbd_up %>%
+  mutate(rel_freq = freq / total_clusters)
+
+###PBD down 
 df_pbd_down <- bind_rows(lapply(timepoints_PBD, function(tp) {
   # Grab the vector of metaclusters for this timepoint
   metaclusters_vec <- downregulated_clusters_PB[[tp]]
@@ -172,15 +193,18 @@ df_pbd_down$metacluster_label <- ifelse(
   df_pbd_down$metacluster
 )
 df_pbd_down$metacluster_label <- unlist(df_pbd_down$metacluster_label)
-
+df_pbd_down <- df_pbd_down %>%
+  left_join(mc_sizes, by = "metacluster")
+df_pbd_down <- df_pbd_down %>%
+  mutate(rel_freq = freq / total_clusters)
 
 #merge dfs
 df_up <- bind_rows(df_ppd_up, df_pbd_up)
 df_down <- bind_rows(df_ppd_down, df_pbd_down)
 
 #bubble plot merged
-ggplot(df_up, aes(x = timepoint, y = metacluster_label, size = freq)) +
-  geom_point(aes(size = freq, color = freq)) +
+ggplot(df_up, aes(x = timepoint, y = metacluster_label, size = rel_freq)) +
+  geom_point(aes(size = rel_freq, color = rel_freq)) +
   scale_size_area(max_size = 10) +
   scale_color_gradient(low = "lightpink", high = "red") +
   scale_x_discrete(limits = c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")) +
@@ -189,16 +213,16 @@ ggplot(df_up, aes(x = timepoint, y = metacluster_label, size = freq)) +
     title = "Upregulated Metaclusters",
     x = "Timepoint",
     y = "Metacluster",
-    size = "Number of Clusters",
-    color = "Number of Clusters"
+    size = "Rel frequency of Clusters",
+    color = "Rel frequency of Clusters"
   ) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.grid.major = element_line(color = "grey85")
   )
 
-ggplot(df_down, aes(x = timepoint, y = metacluster_label, size = freq)) +
-  geom_point(aes(size = freq, color = freq)) +
+ggplot(df_down, aes(x = timepoint, y = metacluster_label, size = rel_freq)) +
+  geom_point(aes(size = rel_freq, color = rel_freq)) +
   scale_size_area(max_size = 10) +
   scale_color_gradient(low = "lightblue", high = "darkblue") +
   scale_x_discrete(limits = c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")) +
@@ -207,8 +231,8 @@ ggplot(df_down, aes(x = timepoint, y = metacluster_label, size = freq)) +
     title = "Downregulated Metaclusters",
     x = "Timepoint",
     y = "Metacluster",
-    size = "Number of Clusters",
-    color = "Number of Clusters"
+    size = "Rel frequency of Clusters",
+    color = "Rel frequency of Clusters"
   ) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
