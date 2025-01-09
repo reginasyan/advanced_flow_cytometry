@@ -1,16 +1,9 @@
 library(ggplot2)
 library(eulerr)
 
-# Function to remove empty clusters
-remove_empty_clusters <- function(cluster_list) {
-  cluster_list[sapply(cluster_list, function(x) length(x) > 0)]
-}
-
-# Function to create and save Euler plots
+# Function to create and save euler plots
 create_euler_plot <- function(cluster_list, plot_title, output_path) {
-  # Open PNG device
   png(output_path, width = 3000, height = 3000, res = 350)
-  # Euler plots
   euler_plot <- plot(
     euler(cluster_list),
     fills = c("#D8BFD8", "#FFB6C1", "#B0C4DE", "#FFFACD"),
@@ -28,42 +21,7 @@ create_euler_plot <- function(cluster_list, plot_title, output_path) {
   dev.off()
 }
 
-# Define cluster lists
-upregulated_clusters_PP_vs_baseline <- list(
-  PPD03 = upregulated_clusters_list$samples_PPD03_vs_samples_baseline,
-  PPD08 = upregulated_clusters_list$samples_PPD08_vs_samples_baseline,
-  PPD14 = upregulated_clusters_list$samples_PPD14_vs_samples_baseline,
-  PPD57 = upregulated_clusters_list$samples_PPD57_vs_samples_baseline
-)
-
-upregulated_clusters_PB_vs_baseline <- list(
-  PBD03 = upregulated_clusters_list$samples_PBD03_vs_samples_baseline,
-  PBD08 = upregulated_clusters_list$samples_PBD08_vs_samples_baseline,
-  PBD14 = upregulated_clusters_list$samples_PBD14_vs_samples_baseline,
-  PBD28 = upregulated_clusters_list$samples_PBD28_vs_samples_baseline
-)
-
-downregulated_clusters_PP_vs_baseline <- list(
-  PPD03 = downregulated_clusters_list$samples_PPD03_vs_samples_baseline,
-  PPD08 = downregulated_clusters_list$samples_PPD08_vs_samples_baseline,
-  PPD14 = downregulated_clusters_list$samples_PPD14_vs_samples_baseline,
-  PPD57 = downregulated_clusters_list$samples_PPD57_vs_samples_baseline
-)
-
-downregulated_clusters_PB_vs_baseline <- list(
-  PBD03 = downregulated_clusters_list$samples_PBD03_vs_samples_baseline,
-  PBD08 = downregulated_clusters_list$samples_PBD08_vs_samples_baseline,
-  PBD14 = downregulated_clusters_list$samples_PBD14_vs_samples_baseline,
-  PBD28 = downregulated_clusters_list$samples_PBD28_vs_samples_baseline
-)
-
-# Remove empty clusters
-upregulated_clusters_PP_vs_baseline <- remove_empty_clusters(upregulated_clusters_PP_vs_baseline)
-upregulated_clusters_PB_vs_baseline <- remove_empty_clusters(upregulated_clusters_PB_vs_baseline)
-downregulated_clusters_PP_vs_baseline <- remove_empty_clusters(downregulated_clusters_PP_vs_baseline)
-downregulated_clusters_PB_vs_baseline <- remove_empty_clusters(downregulated_clusters_PB_vs_baseline)
-
-# Create and save Euler plots
+# Create and save euler plots
 create_euler_plot(
   cluster_list = upregulated_clusters_PP_vs_baseline,
   plot_title = "Upregulated clusters PP vs baseline",
