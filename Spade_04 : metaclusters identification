@@ -1,0 +1,51 @@
+library("ggplot2")
+library(dplyr)
+
+#Create metaclusters / subsets 
+mc_01 <- c("92", "200", "32", "162", "55", "165", "85", "83", "29", "34", "33", "126", "106", "37", "58")
+mc_02 <- c("11", "164", "64", "47", "22", "84", "31", "117", "116", "130", "39", "2", "49", "159", "10", "26", "62", "51", "102", "168", "53", "59")
+mc_03 <- c("197", "104", "134", "173", "182", "174", "180")
+mc_04 <- c("145", "115", "79", "136", "191", "137", "183")
+mc_05 <- c( "45", "120", "108", "139", "14", "99", "36", "109", "111")
+mc_06 <- c("177", "41", "6", "46", "23", "123", "18", "70", "17", "43")
+mc_07 <- c("156", "8", "135", "175", "138", "52", "122", "61", "150", "30", "82", "149","199")
+mc_08 <- c("87", "128", "28", "100", "4", "48", "75", "16", "113", "20", "178", "3", "89", "148", "158", "185", "27", "98", "163", "189", "133", "196", "181", "147", "193", "40", "125")
+mc_09 <- c("166", "97", "194", "198", "179", "190", "140", "176", "81", "93", "153", "131", "146", "50", "121", "167", "152", "154")
+mc_10 <- c("107", "132", "65", "118", "143", "54", "88", "101", "155", "77", "169", "96", "142", "86", "144", "15", "171")
+mc_11 <- c("151", "184", "105", "195", "13", "90", "110", "66", "161", "103", "24", "56", "119", "68", "78")
+mc_12 <- c("160", "21", "72", "9", "192", "12", "114", "5", "38", "95", "35", "91", "127", "73", "76", "141", "129", "7", "44", "188", "57", "187")
+mc_13 <- c("69", "170", "42", "71", "124", "1", "60", "25", "157", "63", "80", "172", "74", "94", "67", "186", "19", "112")
+
+mc_list <- list(mc_01 = mc_01, 
+                mc_02 = mc_02, 
+                mc_03 = mc_03, 
+                mc_04 = mc_04, 
+                mc_05 = mc_05, 
+                mc_06 = mc_06, 
+                mc_07 = mc_07, 
+                mc_08 = mc_08, 
+                mc_09 = mc_09, 
+                mc_10 = mc_10, 
+                mc_11 = mc_11, 
+                mc_12 = mc_12, 
+                mc_13 = mc_13)
+
+# Optional : display relative size of each metacluster in a bar plot 
+mc_sizes <- data.frame(
+  metacluster = names(mc_list),
+  total_clusters = sapply(mc_list, length)
+)
+# Calculate the relative frequency of each metacluster, compared to all metaclusters combined
+mc_sizes <- mc_sizes %>%
+  mutate(rel_freq = total_clusters / sum(total_clusters))  # for each mc, proportion = total_clusters / (sum of all total_clusters)
+
+# Plot the bar plot
+ggplot(mc_sizes, aes(x = metacluster_label, y = rel_freq)) +
+  geom_col(fill = "steelblue") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "Relative Frequency of Each Metacluster",
+    x = "Metacluster",
+    y = "Relative Frequency of Total Clusters"
+  ) +
+  theme_minimal()
