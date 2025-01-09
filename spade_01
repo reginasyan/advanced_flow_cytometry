@@ -27,9 +27,7 @@ SPADE.driver(files,
              file_pattern = ".fcs",
              out_dir = "./05_spade", 
              cluster_cols = clustering_markers,
-             downsampling_samples=20000,
-             downsampling_exclude_pctile=0.01, 
-             downsampling_target_pctile=0.05, 
+             downsampling_target_pctile=0.1, 
              k=200)
 
 samples = colnames(results@cluster.abundances)
@@ -49,43 +47,41 @@ markers_of_interest <- c("CD3", "CD127", "CD45RA", "CD20","CD21","CD22","CD27","
 heatmapViewer(results)
 plot(results)
 
-#treeview
-treeViewer(results, samples = samples, marker = "Ki67")
+# Displaying spade trees with various markers of interest  
+output_dir <- "~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/06_advanced_cytometry/03_figures/06_spade_trees/article" 
+markers_trees <- c("CD20", "CD27", "IgG", "IgM")   #select markers for tree highlight
 
-#loop for PNGs
-for (marker_name in markers_of_interest) {
+index <- 1   # to start the letter annotation 
+
+for (marker_name in markers_trees) {
   # Construct output file name
   output_file <- file.path(output_dir, paste0(marker_name, "_tree.png"))
-  
   # Generate and save PNG
-  png(filename = output_file, width = 2000, height = 2510)
-  treeViewer(results, samples = samples, marker = marker_name)
-  dev.off()  # Close the PNG device
+  png(filename = output_file, width = 1500, height = 1000)
+  # Capture the treeViewer plot as a grob
+  g <- grid.grabExpr({
+    treeViewer(results, samples = samples, marker = marker_name)  # Display the tree plot
+  })
+  # Open a new grid page for the PNG device
+  grid.newpage()
+  # Draw the captured plot
+  grid.draw(g)
+  # Add an additional title to the plot (to precise the marker of interest)
+  grid.text(
+    label = paste(marker_name),
+    x = unit(0.55, "npc"),  # place it near center the center horizontally
+    y = unit(0.98, "npc"),  # at the top, near title 
+    just = "center",
+    gp = gpar(fontsize = 20, col = "black", fontface = "bold")
+  )
+  # Add the letter (A, B, C, ...) in the top-left
+  grid.text(
+    label = LETTERS[index],
+    x = unit(0.02, "npc"),
+    y = unit(0.95, "npc"),
+    gp = gpar(fontsize = 20, col = "black", fontface = "bold")
+  )
+  dev.off()
+  index <- index + 1 # Increment the index for the next letter
 }
-
-#tree with DAC highlight
-treeViewer(results, samples = samples, highlight = resultsDAC, marker = "CD21")
-
-#Correlated Clusters
-variable <- c("PPD00_BB078" = 50, "PPD00_BB231" = 50, "PPD00_BC641" = 50, "PPD00_BD619" = 50, "PPD00_BD620" = 50, "PBD08_BB078" = 32541, "PBD08_BB231" = 16769, "PBD08_BC641" = 16987, "PBD08_BD619" = 11592, "PBD08_BD620" = 7419, "PBD28_BB078" = 14621, "PBD28_BB231" = 7030, "PBD28_BC641" = 1048, "PBD28_BD619" = 3369, "PBD28_BD620" = 3881)
-resultsCC <- identifyCC(results, variable = variable, th.correlation = 0.8, th.pvalue = 0.05)
-
-#classification based on abundance profile 
-set.seed(42)
-results_AP <- classifyAbundanceProfiles(results, method = "k-means", method.parameter = 6)
-print(results_AP)
-plot(results_AP)
-
-#Cell cluster abundance by sample by timeline 
-clusters <- c("1","2")
-streamgraphViewer(results, samples = samples, clusters = clusters)
-
-
-stats_signif_down <- resultsDAC@results[resultsDAC@results$fold.change <= -1 & 
-                                          -log10(resultsDAC@results$pvalue) >= 1.3,]$cluster
-
-
-
-plot(resultsDAC)
-
 
