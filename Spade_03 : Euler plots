@@ -1,0 +1,145 @@
+library(eulerr)
+
+# separate up/downregulated clusters for prime and boost  
+upregulated_clusters_PP = list(
+    PPD03 = upregulated_clusters$PPD03,
+    PPD08 = upregulated_clusters$PPD08,
+    PPD14 = upregulated_clusters$PPD14,
+    PPD57 = upregulated_clusters$PPD57)
+
+upregulated_clusters_PB = list(
+  PBD03 = upregulated_clusters$PBD03,
+  PBD08 = upregulated_clusters$PBD08,
+  PBD14 = upregulated_clusters$PBD14,
+  PBD28 = upregulated_clusters$PBD28)
+
+downregulated_clusters_PP = list(
+  PPD03 = downregulated_clusters$PPD03,
+  PPD08 = downregulated_clusters$PPD08,
+  PPD14 = downregulated_clusters$PPD14,
+  PPD57 = downregulated_clusters$PPD57)
+
+downregulated_clusters_PB = list(
+  PBD03 = downregulated_clusters$PBD03,
+  PBD08 = downregulated_clusters$PBD08,
+  PBD14 = downregulated_clusters$PBD14,
+  PBD28 = downregulated_clusters$PBD28)
+
+# Plot up/downregulated clusters for prime and boost 
+plot(euler(upregulated_clusters_PP),
+      fills = TRUE,
+      edges = TRUE,
+      legend = TRUE,
+      labels = identical(legend, TRUE),
+      quantities = TRUE,
+      strips = NULL,
+      main = "Upregulated clusters PP",
+      n = 200L)
+
+plot(euler(downregulated_clusters_PP),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Downregulated clusters PP",
+     n = 200L)
+
+plot(euler(upregulated_clusters_PB),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Upregulated clusters PB",
+     n = 200L)
+
+plot(euler(downregulated_clusters_PB),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Downregulated clusters PB",
+     n = 200L)
+
+# Plot up/downregulated clusters for all time points 
+plot(euler(upregulated_clusters),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Upregulated clusters",
+     n = 200L)
+
+plot(euler(downregulated_clusters),
+     fills = TRUE,
+     edges = TRUE,
+     legend = TRUE,
+     labels = identical(legend, TRUE),
+     quantities = TRUE,
+     strips = NULL,
+     main = "Downregulated clusters",
+     n = 200L)
+
+# Extract subsets data from Euler plots 
+PPD_up_euler = euler(upregulated_clusters_PP)
+PPD_up_subsets <- lapply(names(PPD_up_euler$original.values), function(subset) {
+  # Split subset name into individual time points
+  sets <- unlist(strsplit(subset, "&"))
+  # If multiple sets are listed, intersect them; if just one, take it directly
+  if (length(sets) > 1) {
+    clusters <- Reduce(intersect, upregulated_clusters_PP[sets])
+  } else {
+    clusters <- upregulated_clusters_PP[[sets]]
+  }
+  return(clusters)
+})
+
+# Assign subset names
+names(PPD_up_subsets) <- names(PPD_up_euler$original.values)
+
+## PPD_down
+PPD_down_euler = euler(downregulated_clusters_PP)
+PPD_down_subsets <- lapply(names(PPD_down_euler$original.values), function(subset) {
+  sets <- unlist(strsplit(subset, "&"))
+  if (length(sets) > 1) {
+    clusters <- Reduce(intersect, downregulated_clusters_PP[sets])
+  } else {
+    clusters <- downregulated_clusters_PP[[sets]]
+  }
+  return(clusters)
+})
+names(PPD_down_subsets) <- names(PPD_down_euler$original.values)
+
+## PBD up
+PBD_up_euler = euler(upregulated_clusters_PB)
+PBD_up_subsets <- lapply(names(PBD_up_euler$original.values), function(subset) {
+  sets <- unlist(strsplit(subset, "&"))
+  if (length(sets) > 1) {
+    clusters <- Reduce(intersect, upregulated_clusters_PB[sets])
+  } else {
+    clusters <- upregulated_clusters_PB[[sets]]
+  }
+  return(clusters)
+})
+names(PBD_up_subsets) <- names(PBD_up_euler$original.values)
+
+## PBD down
+PBD_down_euler = euler(downregulated_clusters_PB)
+PBD_down_subsets <- lapply(names(PBD_down_euler$original.values), function(subset) {
+  sets <- unlist(strsplit(subset, "&"))  
+  if (length(sets) > 1) {
+    clusters <- Reduce(intersect, downregulated_clusters_PB[sets])
+  } else {
+    clusters <- downregulated_clusters_PB[[sets]]
+  }
+  return(clusters)
+})
+names(PBD_down_subsets) <- names(PBD_down_euler$original.values)
+
