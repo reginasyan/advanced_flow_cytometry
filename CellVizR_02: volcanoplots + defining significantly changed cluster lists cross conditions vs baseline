@@ -8,31 +8,15 @@ all_stat_results <- data.frame()  
 # Select baseline samples (BPD19)  
 samples_baseline <- selectSamples(DataCell, condition = "BPD19")
 
-
 # Define conditions for comparison  
 list.conditions <- list("samples_PPD03" = selectSamples(DataCell, condition = "PPD03"),
-
-
                         "samples_PPD08" = selectSamples(DataCell, condition = "PPD08"),
-
-
                         "samples_PPD14" = selectSamples(DataCell, condition = "PPD14"),
-
-
                         "samples_PPD57" = selectSamples(DataCell, condition = "PPD57"),
-
-
                         "samples_PBD03" = selectSamples(DataCell, condition = "PBD03"),
-
-
                         "samples_PBD08" = selectSamples(DataCell, condition = "PBD08"),
-
-
                         "samples_PBD14" = selectSamples(DataCell, condition = "PBD14"),
-
-
                         "samples_PBD28" = selectSamples(DataCell, condition = "PBD28"))
-
 
 # Initialize lists to store results 
 upregulated_clusters_list <- list() 
@@ -98,6 +82,11 @@ for (i in seq_along(list.conditions)) {
 DataCell@statistic <- all_stat_results
 
 # Define significantly changed cluster lists for 8 conditions vs baseline
+upregulated_clusters_PP_vs_baseline <- list()
+upregulated_clusters_PB_vs_baseline <- list()
+downregulated_clusters_PP_vs_baseline <- list()
+downregulated_clusters_PB_vs_baseline <- list()
+
 upregulated_clusters_PP_vs_baseline <- list(
   PPD03 = upregulated_clusters_list$samples_PPD03_vs_samples_baseline,
   PPD08 = upregulated_clusters_list$samples_PPD08_vs_samples_baseline,
