@@ -1,5 +1,4 @@
 library(devtools)
-library("CellVizR")
 library("SPADEVizR")
 
 setwd("~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/advanced_cytometry")
