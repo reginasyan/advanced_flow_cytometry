@@ -53,10 +53,13 @@ DataCell <- generateManifold(DataCell,
                              n_threads = 1, 
                              n_sgd_threads = 1,
                              scale = FALSE)
+
+png("./03_figures/manifoldplots/manifoldplot_UMAP_density.png", width = 3000, height = 3000, res = 300)
 plotManifold(DataCell, 
              markers = "density",
              samples = NULL,
              downsampling = 20000)
+dev.off()
 
 # FlowSOM
 markers <- colnames(DataCell@matrix.expression)
