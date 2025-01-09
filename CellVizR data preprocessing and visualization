@@ -1,6 +1,6 @@
 library(CellVizR)
 
-setwd("~/Desktop/Master 2/Cytometry_Workshop/Project/Project_CellVizR_UMAP_FlowSOM/")
+setwd("~/Desktop/Master 2/Cytometry_Workshop/Project/Project_CellVizR_UMAP_FlowSOM/Project_CellVizR_UMAP_FlowSOM_180C_14MC/")
 
 files <- list.files("./02_data/", 
                     pattern = "fcs",
@@ -110,8 +110,8 @@ plotManifold(DataCell, markers = "clusters", downsampling = 20000) +
 dev.off()
 
 # Heatmap
-png("./03_figures/heatmaps/heatmap_UMAP_FlowSOM_180C_10MC.png", width = 8000, height = 3000, res = 300)
+png("./03_figures/heatmaps/heatmap_UMAP_FlowSOM_180C_14MC.png", width = 4600, height = 2000, res = 300)
 hm.exp <- plotHmExpressions(DataCell, 
-                            metaclusters = 10)
+                            metaclusters = 14)
 plot(hm.exp)
 dev.off()
