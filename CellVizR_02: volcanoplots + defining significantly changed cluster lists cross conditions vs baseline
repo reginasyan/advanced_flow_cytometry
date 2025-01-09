@@ -1,26 +1,43 @@
-library(CellVizR)
-library(ggplot2)
+library(CellVizR)  
+library(ggplot2)  
 
-# Differential analysis (volcanoplots)
-# Initialize statistic slot
-DataCell@statistic <- data.frame()
-all_stat_results <- data.frame()
-# Select baseline samples (BPD19)
+# Differential analysis (volcanoplots)  
+# Initialize statistic slot  
+DataCell@statistic <- data.frame()  
+all_stat_results <- data.frame()  
+# Select baseline samples (BPD19)  
 samples_baseline <- selectSamples(DataCell, condition = "BPD19")
-# Define conditions for comparison
+
+
+# Define conditions for comparison  
 list.conditions <- list("samples_PPD03" = selectSamples(DataCell, condition = "PPD03"),
+
+
                         "samples_PPD08" = selectSamples(DataCell, condition = "PPD08"),
+
+
                         "samples_PPD14" = selectSamples(DataCell, condition = "PPD14"),
+
+
                         "samples_PPD57" = selectSamples(DataCell, condition = "PPD57"),
+
+
                         "samples_PBD03" = selectSamples(DataCell, condition = "PBD03"),
+
+
                         "samples_PBD08" = selectSamples(DataCell, condition = "PBD08"),
+
+
                         "samples_PBD14" = selectSamples(DataCell, condition = "PBD14"),
+
+
                         "samples_PBD28" = selectSamples(DataCell, condition = "PBD28"))
 
-# Initialize lists to store results
-upregulated_clusters_list <- list()
-downregulated_clusters_list <- list()
-all_condition_names <- c()
+
+# Initialize lists to store results 
+upregulated_clusters_list <- list() 
+downregulated_clusters_list <- list() 
+all_condition_names <- c() 
 
 # Set thresholds
 th.pv <- 1.3  # p-value threshold (log10 scale)
