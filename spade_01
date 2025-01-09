@@ -27,7 +27,10 @@ SPADE.driver(files,
              file_pattern = ".fcs",
              out_dir = "./05_spade", 
              cluster_cols = clustering_markers,
-             )
+             downsampling_samples=20000,
+             downsampling_exclude_pctile=0.01, 
+             downsampling_target_pctile=0.05, 
+             k=200)
 
 samples = colnames(results@cluster.abundances)
 samples_BPD19 = c("BPD19_BB078","BPD19_BB231","BPD19_BC641","BPD19_BD619","BPD19_BD620")
@@ -41,18 +44,10 @@ samples_PPD14 = c("PPD14_BB078","PPD14_BC641","PPD14_BD619","PPD14_BD620")
 samples_PPD57 = c("PPD57_BB078","PPD57_BB231","PPD57_BC641","PPD57_BD619","PPD57_BD620")
 
 markers_of_interest <- c("CD3", "CD127", "CD45RA", "CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67")
-markers_of_non_interest = c("CD62L","CD38","IgD","HLADR","CD95","Dead","Beads","Cells-(Ir191)Di","Cells-(Ir193)Di","CD138","CD14","TNFa","IL10","B5R","Bcl-6","CD195","Time","density","Cell_length")
 
-#heatmap
+# Disaply Heatmap
 heatmapViewer(results)
 plot(results)
-
-#AC&DAC
-resultsAC <- identifyAC(results, samples = samples, mu = 1, th.pvalue = 0.01)
-plot(resultsAC)
-
-resultsDAC_PPD03 <- identifyDAC(results, condition1 = samples_PPD03, condition2 = samples_BPD19, th.pvalue = 0.05, th.fc = 2, method.paired = TRUE)
-plot(resultsDAC_PBD08)
 
 #treeview
 treeViewer(results, samples = samples, marker = "Ki67")
