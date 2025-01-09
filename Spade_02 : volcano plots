@@ -1,0 +1,85 @@
+library(devtools)
+library("SPADEVizR")
+
+### Pipeline for generating Differentially Abundant Clusters / volcano plots of all timepoints vs baseline 
+output_dir <- "~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/advanced_cytometry/03_figures/05_volcanos/spade_200"
+
+# Create a list of samples to test, with names for timepoints to test
+samples_condition <- list(samples_PBD03, samples_PBD08, samples_PBD14, samples_PBD28, samples_PPD03, samples_PPD08, samples_PPD14, samples_PPD57)
+names(samples_condition) <- c("PBD03", "PBD08", "PBD14", "PBD28","PPD03", "PPD08", "PPD14", "PPD57")
+
+# Loop, to generate PNGs with letter annotation 
+index <- 1 #to track letter annotation
+for (condition_name in names(samples_condition)) {
+  # Identify DAC function
+  resultsDAC <- identifyDAC(
+    results, 
+    condition1 = samples_condition[[condition_name]], 
+    condition2 = samples_BPD19, 
+    th.pvalue = 0.05, 
+    th.fc = 2, 
+    method.paired = FALSE
+  )
+  # Create the DAC object at each iteration / condition_name 
+  assign(paste0("resultsDAC_", condition_name), resultsDAC)
+  # Define PNG file
+  output_file <- file.path(output_dir, paste0("DAC_", condition_name, ".png"))
+  png(filename = output_file, width = 1000, height = 696)
+  # Capture the DAC ggplot as a grob
+  g <- grid.grabExpr({
+    plot(resultsDAC)  # draws the ggplot internally
+  })
+  # Open a new grid page on the current PNG device
+  grid.newpage()
+  # Draw the captured plot
+  grid.draw(g)
+  # Add a custom title near the top-center
+  grid.text(
+    label = paste(condition_name),
+    x = unit(0.6, "npc"),  
+    y = unit(0.985, "npc"),  
+    just = "center",
+    gp = gpar(fontsize = 14, col = "black", fontface = "plain")
+  )
+  # Add the letter (A, B, C...) in the top-left
+  grid.text(
+    label = LETTERS[index],
+    x = unit(0.02, "npc"),
+    y = unit(0.95, "npc"),
+    gp = gpar(fontsize = 16, col = "black", fontface = "bold")
+  )
+  dev.off()  
+  index <- index + 1
+}
+
+### Loop to extract significant data from resultsDAC
+# create a list of DAC results sorted by timepoint
+resultsDAC_list <- list(
+  PPD03 = resultsDAC_PPD03,
+  PPD08 = resultsDAC_PPD08,
+  PPD14 = resultsDAC_PPD14,
+  PPD57 = resultsDAC_PPD57,
+  PBD03 = resultsDAC_PBD03,
+  PBD08 = resultsDAC_PBD08,
+  PBD14 = resultsDAC_PBD14,
+  PBD28 = resultsDAC_PBD28
+)
+
+# Output lists to store results
+downregulated_clusters <- list()
+upregulated_clusters <- list()
+
+# For loop 
+for (timepoint in names(resultsDAC_list)) {
+  # Extract the current resultsDAC object
+  resultsDAC <- resultsDAC_list[[condition_name]]
+  # downregulated clusters
+  stats_signif_down <- resultsDAC@results[resultsDAC_list[[timepoint]]@results$fold.change <= -1 & 
+                                        -log10(resultsDAC_list[[timepoint]]@results$pvalue) >= 1.3, ]$cluster
+  # upregulated clusters 
+  stats_signif_up <- resultsDAC@results[resultsDAC_list[[timepoint]]@results$fold.change >= 1 & 
+                                  -log10(resultsDAC_list[[timepoint]]@results$pvalue) >= 1.3,]$cluster
+  # Store results in lists
+  downregulated_clusters[[timepoint]] <- stats_signif_down
+  upregulated_clusters[[timepoint]] <- stats_signif_up
+}
