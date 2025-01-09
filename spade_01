@@ -23,18 +23,11 @@ clustering_markers <- c(
   "(Tm169)Di",
   "(Yb171)Di")
 
-markers_of_non_interest = c("CD62L","CD38","IgD","HLADR","CD95","Dead","Beads","Cells-(Ir191)Di","Cells-(Ir193)Di","CD138","CD14","TNFa","IL10","B5R","Bcl-6","CD195","Time","density","Cell_length")
-
-load("./rsave/results_spade.Rsave")
-load("./rsave/resultsDAC_PBD03_spade.Rsave")
-load("./rsave/resultsDAC_PBD08_spade.Rsave")
-load("./rsave/resultsDAC_PBD14_spade.Rsave")
-load("./rsave/resultsDAC_PBD28_spade.Rsave")
-load("./rsave/resultsDAC_PPD03_spade.Rsave")
-load("./rsave/resultsDAC_PPD08_spade.Rsave")
-load("./rsave/resultsDAC_PPD14_spade.Rsave")
-load("./rsave/resultsDAC_PPD57_spade.Rsave")
-
+SPADE.driver(files, 
+             file_pattern = ".fcs",
+             out_dir = "./05_spade", 
+             cluster_cols = clustering_markers,
+             )
 
 samples = colnames(results@cluster.abundances)
 samples_BPD19 = c("BPD19_BB078","BPD19_BB231","BPD19_BC641","BPD19_BD619","BPD19_BD620")
@@ -47,10 +40,8 @@ samples_PPD08 = c("PPD08_BB078","PPD08_BC641","PPD08_BD619","PPD08_BD620")
 samples_PPD14 = c("PPD14_BB078","PPD14_BC641","PPD14_BD619","PPD14_BD620")
 samples_PPD57 = c("PPD57_BB078","PPD57_BB231","PPD57_BC641","PPD57_BD619","PPD57_BD620")
 
-
 markers_of_interest <- c("CD3", "CD127", "CD45RA", "CD20","CD21","CD22","CD27","CD80","IgG","IgM","CD23","CD40","CD197","Bcl2","CD69","CD279","Ki67")
-
-countViewer(results, samples = samples)
+markers_of_non_interest = c("CD62L","CD38","IgD","HLADR","CD95","Dead","Beads","Cells-(Ir191)Di","Cells-(Ir193)Di","CD138","CD14","TNFa","IL10","B5R","Bcl-6","CD195","Time","density","Cell_length")
 
 #heatmap
 heatmapViewer(results)
