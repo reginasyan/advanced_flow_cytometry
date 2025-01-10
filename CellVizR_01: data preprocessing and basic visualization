@@ -112,15 +112,35 @@ plotClustersCounts(DataCell,
 save(DataCell,file = "./05_rsave/DataCell_FlowSOM_180C.Rsave")
 load("./05_rsave/DataCell_FlowSOM_180C.Rsave")
 
-# Extract metadata data
+# Extract metadata data and convert the 'condition' column to a factor and set the desired order
 metadata <- DataCell@metadata
-
-# Convert the 'condition' column to a factor and set the desired order
 metadata$condition <- factor(metadata$condition, levels = c("BPD19", "PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28"))
-
-# Ensure the sample order matches the order of 'condition'
 metadata <- metadata[order(metadata$condition), ]
+
+# Extract column names from matrix.abundance and matrix.count
+matrix_abundance <- DataCell@matrix.abundance
+matrix_count <- DataCell@matrix.cell.count
+
+# Get column names and extract the condition part
+col_names_abundance <- colnames(matrix_abundance)
+col_names_count <- colnames(matrix_count)
+
+# Extract the condition part from column names
+conditions_abundance <- sub("_.*$", "", col_names_abundance)
+conditions_count <- sub("_.*$", "", col_names_count)
+
+# Order by metadata$condition
+new_column_order_abundance <- col_names_abundance[order(match(conditions_abundance, levels(metadata$condition)))]
+new_column_order_count <- col_names_count[order(match(conditions_count, levels(metadata$condition)))]
+
+# Rearrange columns based on the new order
+matrix_abundance <- matrix_abundance[, new_column_order_abundance, drop = FALSE]
+matrix_count <- matrix_count[, new_column_order_count, drop = FALSE]
+
+# Update the DataCell object
 DataCell@metadata <- metadata
+DataCell@matrix.abundance <- matrix_abundance
+DataCell@matrix.cell.count <- matrix_count
 
 # Cluster quality control
 # Small clusters
