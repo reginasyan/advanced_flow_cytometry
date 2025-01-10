@@ -1,0 +1,132 @@
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(ggrepel)
+
+# Initialize and load Data
+matrix_abundance <- matrix()
+matrix_abundance <- DataCell@matrix.abundance
+df_abundance <- data.frame()
+
+# Convert matrix to data frame
+for (i in 1:dim(matrix_abundance)[2]) {
+  for (j in 1:dim(matrix_abundance)[1]) {
+    df_abundance[(i - 1) * dim(matrix_abundance)[1] + j, 1] <- strsplit(colnames(matrix_abundance)[i], split = "_", fixed = TRUE)[[1]][1]
+    df_abundance[(i - 1) * dim(matrix_abundance)[1] + j, 2] <- strsplit(colnames(matrix_abundance)[i], split = "_", fixed = TRUE)[[1]][2]
+    df_abundance[(i - 1) * dim(matrix_abundance)[1] + j, 3] <- matrix_abundance[j, i]
+    df_abundance[(i - 1) * dim(matrix_abundance)[1] + j, 4] <- rownames(matrix_abundance)[j]
+  }
+}
+
+# Rename columns and convert data types
+colnames(df_abundance) <- c("condition", "individual", "abundance", "cluster")
+df_abundance$condition <- factor(
+  df_abundance$condition,
+  levels = c("BPD19", "PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
+)
+df_abundance$individual <- as.factor(df_abundance$individual)
+df_abundance$abundance <- as.numeric(df_abundance$abundance)
+df_abundance$cluster <- as.factor(df_abundance$cluster)
+
+# Calculate mean abundance for each condition and cluster
+abundance_summary <- tapply(
+  df_abundance$abundance,
+  list(df_abundance$condition, df_abundance$cluster),
+  mean
+)
+abundance_summary <- data.frame(abundance_summary)
+abundance_summary$condition <- rownames(abundance_summary)
+rownames(abundance_summary) <- NULL
+
+# Reshape data to long format
+abundance_long <- melt(abundance_summary, id.vars = "condition", variable.name = "cluster", value.name = "abundance")
+abundance_long$cluster <- gsub("^X", "", abundance_long$cluster)
+
+# Prepare data for metacluster abundance line chart
+df_metacluster_abundance <- df_abundance %>%
+  left_join(df_cluster_to_mc, by = "cluster") %>%
+  group_by(condition, individual, metacluster) %>%
+  summarise(abundance = sum(abundance), .groups = 'drop')
+df_metacluster_abundance_summary <- df_metacluster_abundance %>%
+  group_by(condition, metacluster) %>%
+  summarise(mean_abundance = mean(abundance), .groups = 'drop')
+
+# Ensures proper ordering for condition and metacluster factors
+df_metacluster_abundance_summary$condition <- factor(
+  df_metacluster_abundance_summary$condition,
+  levels = c("BPD19", "PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
+)
+df_metacluster_abundance_summary$metacluster <- factor(
+  df_metacluster_abundance_summary$metacluster,
+  levels = as.character(1:14)
+)
+
+# Plot metacluster abundance line chart
+line_chart_metacluster <- ggplot(
+  df_metacluster_abundance_summary, 
+  aes(
+    x = condition, 
+    y = mean_abundance, 
+    color = metacluster, 
+    group = metacluster
+  )
+) +
+  geom_line(size = 1, alpha = 0.8) +
+  geom_point(size = 1.5) +
+  labs(
+    title = "Metaclusters Abundance Across 9 Timepoints",
+    x = "Timepoint",
+    y = "Abundance(%)",
+    color = "Metacluster"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0))) + 
+  theme_minimal(base_size = 18) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 18),
+    axis.text.y = element_text(size = 18), 
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20),
+    legend.text = element_text(size = 20),
+    legend.title = element_text(size = 22),
+    plot.title  = element_text(hjust = 0.5, size = 22)
+  ) +
+  # Add Repelled Labels
+  geom_text_repel(
+    data = label_data, 
+    aes(
+      x = left_x, 
+      y = left_y, 
+      label = metacluster, 
+      color = metacluster
+    ),
+    inherit.aes = FALSE,
+    nudge_x = -0.2,
+    size = 6,
+    direction = "y",
+    segment.color = "darkgrey",
+    segment.size = 0.5,
+    max.overlaps = Inf,
+    show.legend = FALSE
+  ) +
+  geom_text_repel(
+    data = label_data, 
+    aes(
+      x = right_x, 
+      y = right_y, 
+      label = metacluster, 
+      color = metacluster
+    ),
+    inherit.aes = FALSE,
+    nudge_x = 0.2,
+    size = 6,
+    direction = "y",
+    segment.color = "darkgrey",
+    segment.size = 0.5,
+    max.overlaps = Inf,
+    show.legend = FALSE
+  )
+
+# Save plot to file
+png("./03_figures/linecharts/metaclusters_abundance_linechart.png", width = 7500, height = 4500, res = 300)
+plot(line_chart_metacluster)
+dev.off()
