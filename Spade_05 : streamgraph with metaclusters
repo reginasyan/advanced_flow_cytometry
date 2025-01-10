@@ -1,0 +1,103 @@
+library(devtools)
+library("SPADEVizR")
+library(ggplot2)
+library(dplyr)
+
+# Create a vector to identify metacluster from cluster, using mc_list object (previously defined)
+clusters_to_metacluster <- unlist(
+  lapply(names(mc_list), function(mc) {
+    # mc_list_test[[mcn]] is the vector of cluster IDs for that metacluster
+    cluster_ids <- mc_list[[mc]]    
+    # Build a named character vector for these cluster IDs
+    # The name is the cluster ID, the value is the metacluster name
+    setNames(rep(mc, length(cluster_ids)), cluster_ids)
+  })
+)
+
+# Extract cluster abundances from results df 
+cluster_abundances <- results@cluster.abundances
+# Convert `cluster_abundances` to a data frame with a "cluster" column
+cluster_abundances2 <- tibble::rownames_to_column(as.data.frame(cluster_abundances), var="cluster")
+# Add metacluster label
+cluster_abundances2$metacluster <- clusters_to_metacluster[cluster_abundances2$cluster]
+# Summarize by metacluster
+abund_mc_df <- cluster_abundances2 %>%
+  group_by(metacluster) %>%
+  summarise(across(-cluster, sum))
+
+# Create a new df of results for streamgraph 
+results_stream <- results
+# Convert `abund_mc_df` to matrix or data.frame with rownames
+abund_mc_matrix <- as.matrix(abund_mc_df[,-1])     # numeric columns only
+rownames(abund_mc_matrix) <- abund_mc_df$metacluster
+results_stream@cluster.abundances <- as.data.frame(abund_mc_matrix)
+results_stream@cluster.number <- nrow(abund_mc_matrix)         
+results_stream@cluster.names  <- rownames(abund_mc_matrix)     
+
+# change order of samples, to avoid alphabetical order (in order to have PPD before PBD)
+samples = c(samples_BPD19, samples_PPD03, samples_PPD08, samples_PPD14, samples_PPD57, samples_PBD03, samples_PBD08, samples_PBD14, samples_PBD28)
+
+# Plot the streamgraph of metaclusters 
+streamgraphViewer(
+  results_stream,
+  samples = samples,
+  clusters = rownames(abund_mc_matrix),  # e.g. c("mc_01", "mc_02", ..., "mc_09")
+  use.relative = TRUE
+)
+
+
+### Additional streamgraph, displaying separate streamgraph for each macaque :
+# Extract the subject IDs ("BB078", "BB231", etc.)
+subject_ids <- unique(gsub(".*_", "", results_stream@sample.names))  # Get "BB078", "BB231", ...
+## For each subject, gather all sample names that contain that subject ID.
+subject_samples <- lapply(subject_ids, function(subj) {
+  grep(subj, results_stream@sample.names, value = TRUE)  # Get samples for this subject
+})
+names(subject_samples) <- subject_ids
+# Sort based on real timeline 
+timeline <- c("BPD19", timepoints)
+# Sort the sample names for each subject based on the desired 'timeline' : 
+# Remove the underscore and subject ( "_BB078" ) using sub("_[A-Z0-9]+$", "", samples ), then match them to 'timeline' to get a numeric index for sorting.
+subject_samples <- lapply(subject_samples, function(samples) {
+  samples[order(match(sub("_[A-Z0-9]+$", "", samples), timeline))]
+})
+
+# Finally create a for loop to display PNGs with annotation 
+output_dir <- "~/Library/Mobile Documents/com~apple~CloudDocs/Master 2 /Master 2 I2S/06_advanced_cytometry/03_figures/MDS"
+index <- 1  
+for (subj in names(subject_samples)) {
+  output_file <- file.path(output_dir, paste0("Streamgraph_", subj, ".png"))
+  # Open PNG device
+  png(filename = output_file, width = 1200, height = 800)
+  # Capture the streamgraph plot as a grob
+  g <- grid.grabExpr({
+    streamgraphViewer(
+      results_stream,
+      samples = subject_samples[[subj]],  # Ordered sample names
+      clusters = rownames(results_stream@cluster.abundances),
+      use.relative = TRUE
+    )
+  })
+  # Open a new grid page
+  grid.newpage()
+  # Draw the captured plot
+  grid.draw(g)
+  # Add a subject title at the top-center
+  grid.text(
+    label = paste(subj),
+    x = unit(0.5, "npc"),   
+    y = unit(0.97, "npc"),  
+    just = "center",
+    gp = gpar(fontsize = 16, fontface = "bold")
+  )
+  # Add the letter annotation (A, B, C...) at the top-left
+  grid.text(
+    label = LETTERS[index],
+    x = unit(0.02, "npc"),   
+    y = unit(0.96, "npc"),   
+    just = "left",
+    gp = gpar(fontsize = 18, col = "black", fontface = "bold")
+  )
+  dev.off()
+  index <- index + 1
+}
