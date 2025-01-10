@@ -84,3 +84,8 @@ for (marker_name in markers_trees) {
   index <- index + 1 # Increment the index for the next letter
 }
 
+# Quality control
+uniform <- qcUniformClusters(results,
+                             density.PDFfile = "SPADEVizR-qcreport-UniformClusters_density.pdf",
+                             heatmap.PDFfile = "SPADEVizR-qcreport-UniformClusters_heatmap.pdf",
+                             uniform.test   = "unimodality")
