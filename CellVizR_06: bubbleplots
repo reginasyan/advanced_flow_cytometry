@@ -1,0 +1,140 @@
+library(ggplot2)     
+library(dplyr)     
+
+# Bubble plots
+# Create a general function for processing each situation and plotting bubble plots
+plot_bubble_chart <- function(significantly_changed_cluster_list, df_cluster_to_mc, bubble_plot_filepath, title_prefix) {
+  # 1. Calculate the total number of clusters under each metacluster
+  df_metacluster_total <- df_cluster_to_mc %>%
+    group_by(metacluster) %>%
+    summarise(total_clusters = n()) %>%
+    ungroup()
+  
+  # Store data for all conditions
+  df_bubble_data <- data.frame()
+  
+  # 2. Iterate through all conditions to collect information on significantly changed clusters
+  for (condition_name in names(significantly_changed_cluster_list)) {
+    condition_label <- gsub("samples_|_vs_samples_baseline", "", condition_name)
+    
+    # Get the significantly changed clusters for the current condition
+    significant_clusters <- significantly_changed_cluster_list[[condition_name]]
+    
+    if (length(significant_clusters) > 0) {
+      # Merge significantly changed clusters with the metacluster mapping table
+      df_significant_clusters <- merge(
+        x  = data.frame(cluster = significant_clusters, stringsAsFactors = FALSE),
+        y  = df_cluster_to_mc,
+        by = "cluster"
+      )
+      
+      # Count the number of significantly changed clusters under each metacluster
+      df_metacluster_ratio <- df_significant_clusters %>%
+        group_by(metacluster) %>%
+        summarise(significant_clusters_count = n()) %>%
+        ungroup()
+      
+      # Merge with a complete list of metaclusters to avoid missing data
+      all_metaclusters <- as.character(1:14)
+      df_metacluster_ratio <- merge(
+        data.frame(metacluster = all_metaclusters, stringsAsFactors = FALSE),
+        df_metacluster_ratio,
+        by = "metacluster",
+        all.x = TRUE
+      )
+      df_metacluster_ratio$significant_clusters_count[is.na(df_metacluster_ratio$significant_clusters_count)] <- 0
+      
+      # 3. Calculate the proportion (fraction)
+      df_metacluster_ratio <- merge(df_metacluster_ratio, df_metacluster_total, by = "metacluster", all.x = TRUE)
+      df_metacluster_ratio$fraction_changed <- df_metacluster_ratio$significant_clusters_count / df_metacluster_ratio$total_clusters
+      
+      # Add the condition label
+      df_metacluster_ratio$condition <- condition_label
+      
+      # Combine with the final data for plotting
+      df_bubble_data <- rbind(df_bubble_data, df_metacluster_ratio)
+    } else {
+      message(sprintf("No clusters for condition: %s", condition_label))
+    }
+  }
+  
+  # Exit if there is no data
+  if (nrow(df_bubble_data) == 0) {
+    message("No data available for plotting.")
+    return()
+  }
+  
+  # Set the order of conditions
+  condition_levels <- c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
+  df_bubble_data$condition <- factor(df_bubble_data$condition, levels = condition_levels)
+  
+  # Set the order of metaclusters
+  df_bubble_data$metacluster <- factor(
+    df_bubble_data$metacluster,
+    levels = as.character(1:14)
+  )
+  
+  # 4. Plot the bubble chart
+  bubble_plot <- ggplot(df_bubble_data, aes(
+    x     = condition, 
+    y     = metacluster, 
+    size  = fraction_changed,
+    color = fraction_changed
+  )) +
+    geom_point(alpha = 0.8) +
+    scale_size_continuous(range = c(1, 14)) +
+    scale_color_gradient(low = "#FFC300", high = "#FF4500") +
+    labs(
+      title = paste(title_prefix, "Conditions"),
+      x     = "Condition", 
+      y     = "Metacluster",
+      size  = "Fraction changed",
+      color = "Fraction changed"
+    ) +
+    theme_bw(base_size = 18) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 16),
+      axis.text.y = element_text(size = 16),
+      plot.title = element_text(hjust = 0.5)
+    )
+  
+  # Save the plot as an image
+  png(bubble_plot_filepath, width = 8000, height = 3500, res = 300)
+  print(bubble_plot)
+  dev.off()
+}
+
+plot_bubble_chart(
+  significantly_changed_cluster_list = upregulated_clusters_PB_vs_baseline,
+  df_cluster_to_mc                   = df_cluster_to_mc,
+  bubble_plot_filepath               = "./03_figures/bubbleplots/bubbleplot_upregulated_PB_vs_baseline.png",
+  title_prefix                       = "Upregulated clusters across PB"
+)
+
+plot_bubble_chart(
+  significantly_changed_cluster_list = downregulated_clusters_PP_vs_baseline,
+  df_cluster_to_mc                   = df_cluster_to_mc,
+  bubble_plot_filepath               = "./03_figures/bubbleplots/bubbleplot_downregulated_PP_vs_baseline.png",
+  title_prefix                       = "Downregulated clusters across PP"
+)
+
+plot_bubble_chart(
+  significantly_changed_cluster_list = downregulated_clusters_PB_vs_baseline,
+  df_cluster_to_mc                   = df_cluster_to_mc,
+  bubble_plot_filepath               = "./03_figures/bubbleplots/bubbleplot_downregulated_PB_vs_baseline.png",
+  title_prefix                       = "Downregulated clusters across PB"
+)
+
+plot_bubble_chart(
+  significantly_changed_cluster_list = upregulated_clusters_list,
+  df_cluster_to_mc                   = df_cluster_to_mc,
+  bubble_plot_filepath               = "./03_figures/bubbleplots/bubbleplot_upregulated_all_vs_baseline.png",
+  title_prefix                       = "Upregulated clusters across all"
+)
+
+plot_bubble_chart(
+  significantly_changed_cluster_list = downregulated_clusters_list,
+  df_cluster_to_mc                   = df_cluster_to_mc,
+  bubble_plot_filepath               = "./03_figures/bubbleplots/bubbleplot_downregulated_all_vs_baseline.png",
+  title_prefix                       = "Downregulated clusters across all"
+)
