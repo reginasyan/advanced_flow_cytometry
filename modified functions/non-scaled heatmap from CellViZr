@@ -1,0 +1,219 @@
+computeMarkerMedians <- function(exprs) {
+  
+  exprs <- plyr::ddply(exprs, c("clusters", "marker"), function(df) {
+    med <- stats::median(df$value)
+    return(med) })
+  
+  colnames(exprs) <- c("clusters", "marker", "med")
+  exprs$clusters <- as.character(exprs$clusters)
+  exprs$marker <- as.vector(exprs$marker)
+  
+  return(exprs)
+}
+
+
+
+plotHmExpressions <- function(Celldata,
+                              markers = NULL,
+                              clusters = NULL,
+                              metaclusters = 1,
+                              method.hclust = c("ward.D", "ward.D2", "single",
+                                                "complete", "average", "mcquitty",
+                                                "median", "centroid"),
+                              nb.cat = 5,
+                              seed = 42) {
+  
+  method.hclust <- match.arg(method.hclust)
+  
+  checkmate::qassert(markers, c("0", "S*"))
+  checkmate::qassert(clusters, c("0", "S*", "I*"))
+  checkmate::qassert(method.hclust, "S1")
+  checkmate::qassert(nb.cat, "N1")
+  checkmate::qassert(seed, "N1")
+  
+  rainbow.color.palette <- c("white", "yellow", "orange", "red", "red4")
+  rainbow.color.palette <- grDevices::colorRampPalette(rainbow.color.palette)(nb.cat)
+  
+  meta.color.palette2 <- grDevices::rainbow(metaclusters)
+  
+  if (!is.null(markers)) {
+    exp.markers <- Celldata@matrix.expression[, markers]
+  } else {
+    exp.markers <- Celldata@matrix.expression[, colnames(Celldata@matrix.expression)]
+  }
+  
+  exp.markers$clusters <- Celldata@identify.clusters
+  
+  if (!is.null(clusters)) {
+    exp.markers <- exp.markers[exp.markers$clusters %in% clusters, ]
+  }
+  
+  proj.melt <- reshape::melt(exp.markers, id = "clusters")
+  colnames(proj.melt) <- c("clusters", "marker", "value")
+  
+  proj.melt <- computeMarkerMedians(proj.melt)
+  
+  row.data <- reshape::cast(proj.melt, marker ~ clusters, value = "med")
+  row.data$marker <- NULL
+  hclust.row <- stats::hclust(stats::dist(row.data), method = method.hclust)
+  labels.row <- hclust.row$labels[hclust.row$order]
+  proj.melt$marker <- factor(proj.melt$marker, levels = labels.row)
+  
+  col.data <- reshape::cast(proj.melt, clusters ~ marker, value = "med")
+  col.data$clusters <- NULL
+  hclust.col <- stats::hclust(stats::dist(col.data), method = method.hclust)
+  
+  do.call("set.seed", list(seed))
+  dist.col <- stats::dist(col.data)
+  isoMDS <- MASS::isoMDS(dist.col, k = 1, trace = FALSE)
+  col.tsne <- isoMDS$points
+  
+  col.order <- rownames(col.tsne)[order(col.tsne)]
+  hclust.col <- dendextend::rotate(hclust.col, col.order)
+  labels.col <- hclust.col$labels[hclust.col$order]
+  proj.melt$clusters <- factor(proj.melt$clusters, levels = labels.col)
+  
+  cutree.col = stats::cutree(hclust.col, k = metaclusters)
+  orderMC.col = seq(1, metaclusters)
+  names(orderMC.col) = unique(as.character(as.vector(cutree.col[labels.col])))
+  
+  MC.col = data.frame("MC" = orderMC.col[as.character(cutree.col[labels.col])],
+                      "clust" = factor(labels.col, levels = labels.col))
+  
+  labelsMC.col = plyr::ddply(MC.col, "MC", plyr::summarise, pos = mean(as.numeric(clust)))
+  linesMC.col = plyr::ddply(MC.col, "MC", plyr::summarise, pos = max(as.numeric(clust)) + 0.5)
+  
+  plot <- ggplot2::ggplot(proj.melt,
+                          ggplot2::aes(x = clusters, y = marker)) +
+    ggplot2::geom_tile(ggplot2::aes(fill = med), color = "black", linewidth = 0.1) +
+    ggplot2::scale_x_discrete(expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(expand = c(0, 0))
+  
+  plot <- plot +
+    ggplot2::scale_fill_gradientn(colours = rainbow.color.palette, na.value = "black") +
+    ggplot2::labs(fill = "Median")
+  
+  plot <- plot +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+      panel.background = ggplot2::element_blank())
+  
+  dend.data <- ggdendro::dendro_data(stats::as.dendrogram(hclust.row), type = "rectangle")
+  dendro.row <- ggplot2::ggplot(dend.data$segments) +
+    ggplot2::geom_segment(ggplot2::aes(x = x, y = y,
+                                       xend = xend, yend = yend)) +
+    ggplot2::scale_x_continuous(expand = c(0.5 / length(unique(proj.melt$marker)),
+                                           0.5 / length(unique(proj.melt$marker)))) +
+    ggplot2::coord_flip() +
+    ggplot2::scale_y_reverse() +
+    ggplot2::theme_void()
+  label.row <- ggplot2::ggplot() +
+    ggplot2::geom_text(data = dend.data$labels, ggplot2::aes(x = x, label = label),
+                       size = 3, y = 0, hjust = 0, vjust = 0.5, angle = 0) +
+    ggplot2::scale_x_continuous(expand = c(0.5 / length(unique(proj.melt$marker)),
+                                           0.5 / length(unique(proj.melt$marker)))) +
+    ggplot2::coord_flip() +
+    ggplot2::theme_void()
+  
+  dend.data <- ggdendro::dendro_data(stats::as.dendrogram(hclust.col), type = "rectangle")
+  dendro.col <- ggplot2::ggplot(dend.data$segments) +
+    ggplot2::geom_segment(ggplot2::aes(x = x, y = y,
+                                       xend = xend, yend = yend)) +
+    ggplot2::scale_x_continuous(expand = c(0.5 / length(unique(proj.melt$clusters)),
+                                           0.5 / length(unique(proj.melt$clusters)))) +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = 0.5, size = 12, face = "bold"))
+  label.col <- ggplot2::ggplot() +
+    ggplot2::geom_text(data = dend.data$labels, ggplot2::aes(x = x, label = label),
+                       size = 2, y = 1, hjust = 0, vjust = 0.5, angle = -90) +
+    ggplot2::scale_x_continuous(expand = c(0.5 / length(unique(proj.melt$clusters)),
+                                           0.5 / length(unique(proj.melt$clusters)))) +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+      legend.position = "none")
+  
+  tile.col <- ggplot2::ggplot() +
+    ggplot2::geom_tile(data = MC.col, 
+                       ggplot2::aes(x = clust,
+                                    y = 1,
+                                    fill = MC)) +
+    ggplot2::scale_fill_gradientn(colours = meta.color.palette2, na.value = "black") +
+    ggplot2::geom_text(data = labelsMC.col, 
+                       mapping = ggplot2::aes(x = pos, 
+                                              label = MC),
+                       y = 1, size=3, angle = -90) +
+    ggplot2::scale_x_discrete(expand = c(0,0)) +
+    ggplot2::scale_y_continuous(expand = c(0,0)) +
+    ggplot2::geom_vline(xintercept = linesMC.col$pos, 
+                        color = "black", linewidth=0.1) +
+    ggplot2::geom_vline(xintercept = 0.5, 
+                        color="black", linewidth=0.1) +
+    ggplot2::geom_hline(yintercept=c(0.5,1.5), 
+                        color = "black", linewidth=0.1) +
+    ggplot2::theme_void() +
+    ggplot2::theme(axis.title=ggplot2::element_blank(),
+                   axis.ticks=ggplot2::element_blank(),
+                   axis.text=ggplot2::element_blank(),
+                   legend.position = "none")
+  
+  grob <- list()
+  grob[["hm"]] <- plot + ggplot2::theme(legend.position = "none")
+  grob[["dendro.col"]] <- dendro.col
+  grob[["dendro.row"]] <- dendro.row
+  grob[["label.col"]] <- label.col
+  grob[["label.row"]] <- label.row
+  grob[["tile.col"]] <- tile.col
+  grob[["legend"]] <- ggpubr::get_legend(plot)
+  
+  
+  hm.exp <- gridExtra::arrangeGrob(
+    grobs = grob,
+    layout_matrix = rbind(
+      c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,7,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,NA,NA,NA),
+      c(NA,NA,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,NA,NA,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,NA),
+      c(NA,NA,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,NA,NA,NA),
+      c(NA,NA,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,NA,NA,NA),
+      c(NA,NA,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,NA,NA,NA),
+      c(NA,NA,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,NA,NA,NA),
+      c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
+  )
+  
+  hm.exp$order.clusters <- labels.col
+  hm.exp$order.markers <- labels.row
+  
+  return(hm.exp)
+}
