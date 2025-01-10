@@ -4,7 +4,7 @@ library(dplyr)     
 # Bubble plots
 # Create a general function for processing each situation and plotting bubble plots
 plot_bubble_chart <- function(significantly_changed_cluster_list, df_cluster_to_mc, bubble_plot_filepath, title_prefix) {
-  # 1. Calculate the total number of clusters under each metacluster
+  # Calculate the total number of clusters under each metacluster
   df_metacluster_total <- df_cluster_to_mc %>%
     group_by(metacluster) %>%
     summarise(total_clusters = n()) %>%
@@ -13,7 +13,7 @@ plot_bubble_chart <- function(significantly_changed_cluster_list, df_cluster_to_
   # Store data for all conditions
   df_bubble_data <- data.frame()
   
-  # 2. Iterate through all conditions to collect information on significantly changed clusters
+  # Iterate through all conditions to collect information on significantly changed clusters
   for (condition_name in names(significantly_changed_cluster_list)) {
     condition_label <- gsub("samples_|_vs_samples_baseline", "", condition_name)
     
@@ -44,7 +44,7 @@ plot_bubble_chart <- function(significantly_changed_cluster_list, df_cluster_to_
       )
       df_metacluster_ratio$significant_clusters_count[is.na(df_metacluster_ratio$significant_clusters_count)] <- 0
       
-      # 3. Calculate the proportion (fraction)
+      # Calculate the proportion (fraction)
       df_metacluster_ratio <- merge(df_metacluster_ratio, df_metacluster_total, by = "metacluster", all.x = TRUE)
       df_metacluster_ratio$fraction_changed <- df_metacluster_ratio$significant_clusters_count / df_metacluster_ratio$total_clusters
       
@@ -74,7 +74,7 @@ plot_bubble_chart <- function(significantly_changed_cluster_list, df_cluster_to_
     levels = as.character(1:14)
   )
   
-  # 4. Plot the bubble chart
+  # Plot the bubble chart
   bubble_plot <- ggplot(df_bubble_data, aes(
     x     = condition, 
     y     = metacluster, 
