@@ -1,0 +1,44 @@
+library(ggplot2)
+library(dplyr)
+
+# Extract cluster abundances from results
+cluster_abundances <- results@cluster.abundances
+# Convert to matrix
+cluster_abundances_matrix <- as.matrix(cluster_abundances)  
+# Transpose so samples become rows
+cluster_abundances_matrix <- t(cluster_abundances_matrix)
+
+# Compute a distance matrix
+dist_mat <- dist(cluster_abundances_matrix, method = "euclidean")  
+# Run classical MDS
+mds_res <- cmdscale(dist_mat, k = 2)  
+# Create a dataframe with results 
+df_mds <- data.frame(
+  Sample = rownames(mds_res),
+  MDS1 = mds_res[,1],
+  MDS2 = mds_res[,2], 
+  timepoints <- samples_timepoints
+)
+# Compute the hull points for each timepoint 
+df_hull <- df_mds %>%
+  group_by(timepoint) %>%        # group the data by 'timepoint'
+  slice(chull(MDS1, MDS2))       # select only the boundary points from MDS1, MDS2
+
+# Plot results 
+ggplot(df_mds, aes(x = MDS1, y = MDS2, color = timepoints, )) +
+  # Polygons from hull points
+  geom_polygon(
+    data = df_hull,
+    aes(fill = timepoints....samples_timepoints, group = timepoints....samples_timepoints),
+    alpha = 0.3,      
+    color = NA   
+  ) +
+  geom_point(size = 3) +
+  scale_color_discrete(name = "Timepoint") +
+  scale_fill_discrete(name = "Timepoint") +
+  theme_minimal() +
+  labs(
+    title = "MDS per timepoint",
+    x = "MDS1",
+    y = "MDS2"
+  )
