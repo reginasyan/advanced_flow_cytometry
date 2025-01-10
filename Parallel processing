@@ -1,3 +1,0 @@
-install.packages("doParallel")
-library(doParallel)
-registerDoParallel(cores = parallel::detectCores())
