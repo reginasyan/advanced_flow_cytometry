@@ -55,7 +55,7 @@ subject_samples <- lapply(subject_ids, function(subj) {
 })
 names(subject_samples) <- subject_ids
 # Sort based on real timeline 
-timeline <- c("BPD19", timepoints)
+timeline <- c("BPD19", "PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
 # Sort the sample names for each subject based on the desired 'timeline' : 
 # Remove the underscore and subject ( "_BB078" ) using sub("_[A-Z0-9]+$", "", samples ), then match them to 'timeline' to get a numeric index for sorting.
 subject_samples <- lapply(subject_samples, function(samples) {
