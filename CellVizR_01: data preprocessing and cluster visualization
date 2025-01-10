@@ -61,6 +61,39 @@ plotManifold(DataCell,
              downsampling = 20000)
 dev.off()
 
+# Create a loop to generate UMAPs with markers of interest 
+markers_of_interest <- c("CD20", "CD27", "IgG", "IgM", "CD3")
+index <- 1  
+for (marker in markers_of_interest) {
+  output_file <- file.path(output_dir, paste0("UMAP_", marker, ".png"))
+  # Open PNG device
+  png(filename = output_file, width = 800, height = 800)
+  # Call plotManifold
+  p <- plotManifold(
+    DataCell,
+    markers = marker,
+    samples = NULL,     
+    scale = FALSE,    
+    downsampling = 100000
+  )
+  # Add letter annotation
+  p_annotated <- p +
+    annotate(
+      "text",
+      x = -Inf,  # far right
+      y = Inf,  # top
+      label = LETTERS[index],
+      hjust = -0.1,   # shift left from right edge
+      vjust = 1.2,   # shift down from top
+      size = 6,
+      fontface = "bold"
+    )
+  # Print the final annotated plot onto the current PNG device
+  print(p_annotated)
+  dev.off()
+  index <- index + 1
+}
+
 # FlowSOM
 markers <- colnames(DataCell@matrix.expression)
 DataCell <- identifyClusters(DataCell,
