@@ -1,0 +1,103 @@
+library("ggplot2")
+library(dplyr)
+
+timepoints <- c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")
+timepoints_PPD <- c("PPD03", "PPD08", "PPD14", "PPD57")
+timepoints_PBD <- c("PBD03", "PBD08", "PBD14", "PBD28")
+
+# Create a function to assign metacluster to cluster, using mc_list
+assign_mc <- function(cluster_ids, mc_list) {
+  sapply(cluster_ids, function(cid) {
+    hits <- names(mc_list)[sapply(mc_list, function(v) cid %in% v)]
+    if (length(hits) == 0) {
+      "None"  # or NA
+    } else {
+      paste(hits, collapse = ",")
+    }
+  })
+}
+
+# Use the assign-mc function to assign metaclusters to up/downregulated clusters lists (cf spade_03) 
+upregulated_clusters_PP <- lapply(upregulated_clusters_PP, function(cluster_ids) {
+  assign_mc(cluster_ids, mc_list)
+})
+upregulated_clusters_PB <- lapply(upregulated_clusters_PB, function(cluster_ids) {
+  assign_mc(cluster_ids, mc_list)
+})
+downregulated_clusters_PP <- lapply(downregulated_clusters_PP, function(cluster_ids) {
+  assign_mc(cluster_ids, mc_list)
+})
+downregulated_clusters_PB <- lapply(downregulated_clusters_PB, function(cluster_ids) {
+  assign_mc(cluster_ids, mc_list)
+})
+
+### Create one combined data frame of counts for a given subpart (PPD_up for ex)
+df_ppd_up <- bind_rows(lapply(timepoints_PPD, function(tp) {
+  # Grab the vector of metaclusters for this timepoint
+  metaclusters_vec <- upregulated_clusters_PP[[tp]]
+  # If it's NULL or empty, return an empty data frame
+  if (is.null(metaclusters_vec) || length(metaclusters_vec) == 0) {
+    return(data.frame(
+      metacluster = character(0),
+      freq = integer(0),
+      timepoint = character(0)
+    ))
+  }
+  # Convert to a data frame, count how many times each metacluster appears
+  df_tp <- data.frame(metacluster = metaclusters_vec) %>%
+    group_by(metacluster) %>%
+    summarise(freq = n(), .groups = "drop") %>%
+    mutate(timepoint = tp)
+  return(df_tp)
+}))
+### in order to display the relative frequency of clusters for each metacluster : 
+# add the total number of clusters for each mc in another column 
+df_ppd_up <- df_ppd_up %>%
+  left_join(mc_sizes, by = "metacluster")
+# add relative abundance in another column
+df_ppd_up <- df_ppd_up %>%
+  mutate(rel_freq = freq / total_clusters)
+
+### Then, manually repeat the exact same process for other subparts (df_ppd_down, df_pbd_up, df_pbd_down)
+
+# Combine dfs to have up/downregulated metaclusters across whole timeline
+df_up <- bind_rows(df_ppd_up, df_pbd_up)
+df_down <- bind_rows(df_ppd_down, df_pbd_down)
+
+# Plot bubble plot of upregulated metaclusters (red)
+ggplot(df_up, aes(x = timepoint, y = metacluster, size = rel_freq)) +
+  geom_point(aes(size = rel_freq, color = rel_freq)) +
+  scale_size_area(max_size = 10) +
+  scale_color_gradient(low = "lightpink", high = "red") +
+  scale_x_discrete(limits = c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")) +
+  theme_minimal() +
+  labs(
+    title = "Upregulated Metaclusters",
+    x = "Timepoint",
+    y = "Metacluster",
+    size = "Relative frequency of Clusters",
+    color = "Relative frequency of Clusters"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_line(color = "grey85")
+  )
+
+# Plot bubble plot of downregulated metaclusters (blue)
+ggplot(df_down, aes(x = timepoint, y = metacluster, size = rel_freq)) +
+  geom_point(aes(size = rel_freq, color = rel_freq)) +
+  scale_size_area(max_size = 10) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  scale_x_discrete(limits = c("PPD03", "PPD08", "PPD14", "PPD57", "PBD03", "PBD08", "PBD14", "PBD28")) +
+  theme_minimal() +
+  labs(
+    title = "Downregulated Metaclusters",
+    x = "Timepoint",
+    y = "Metacluster",
+    color = "Relative frequency of Clusters",
+    size = "Relative frequency of Clusters"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_line(color = "grey85")
+  )
