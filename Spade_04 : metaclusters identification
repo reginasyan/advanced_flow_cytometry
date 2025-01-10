@@ -40,7 +40,7 @@ mc_sizes <- mc_sizes %>%
   mutate(rel_freq = total_clusters / sum(total_clusters))  # for each mc, proportion = total_clusters / (sum of all total_clusters)
 
 # Plot the bar plot
-ggplot(mc_sizes, aes(x = metacluster_label, y = rel_freq)) +
+ggplot(mc_sizes, aes(x = metacluster, y = rel_freq)) +
   geom_col(fill = "steelblue") +
   scale_y_continuous(labels = scales::percent_format()) +
   labs(
