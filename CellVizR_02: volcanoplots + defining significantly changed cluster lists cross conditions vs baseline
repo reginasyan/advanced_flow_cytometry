@@ -1,85 +1,181 @@
 library(CellVizR)  
-library(ggplot2)  
+library(ggplot2)
+library(gridExtra)
+library(png)
+library(grid)
+library(cowplot)
 
-# Differential analysis (volcanoplots)  
-# Initialize statistic slot  
-DataCell@statistic <- data.frame()  
-all_stat_results <- data.frame()  
-# Select baseline samples (BPD19)  
+# Differential analysis (volcanoplots)
+# Set output directory
+output_dir <- "./03_figures/volcanoplots/"
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+# Initialize statistics
+DataCell@statistic <- data.frame()
+all_stat_results <- data.frame()
+
+# Select baseline samples (BPD19)
 samples_baseline <- selectSamples(DataCell, condition = "BPD19")
 
-# Define conditions for comparison  
-list.conditions <- list("samples_PPD03" = selectSamples(DataCell, condition = "PPD03"),
-                        "samples_PPD08" = selectSamples(DataCell, condition = "PPD08"),
-                        "samples_PPD14" = selectSamples(DataCell, condition = "PPD14"),
-                        "samples_PPD57" = selectSamples(DataCell, condition = "PPD57"),
-                        "samples_PBD03" = selectSamples(DataCell, condition = "PBD03"),
-                        "samples_PBD08" = selectSamples(DataCell, condition = "PBD08"),
-                        "samples_PBD14" = selectSamples(DataCell, condition = "PBD14"),
-                        "samples_PBD28" = selectSamples(DataCell, condition = "PBD28"))
+# Define comparison conditions
+list.conditions <- list(
+  "samples_PPD03" = selectSamples(DataCell, condition = "PPD03"),
+  "samples_PPD08" = selectSamples(DataCell, condition = "PPD08"),
+  "samples_PPD14" = selectSamples(DataCell, condition = "PPD14"),
+  "samples_PPD57" = selectSamples(DataCell, condition = "PPD57"),
+  "samples_PBD03" = selectSamples(DataCell, condition = "PBD03"),
+  "samples_PBD08" = selectSamples(DataCell, condition = "PBD08"),
+  "samples_PBD14" = selectSamples(DataCell, condition = "PBD14"),
+  "samples_PBD28" = selectSamples(DataCell, condition = "PBD28")
+)
 
-# Initialize lists to store results 
-upregulated_clusters_list <- list() 
-downregulated_clusters_list <- list() 
-all_condition_names <- c() 
+# Initialize lists to store results
+upregulated_clusters_list <- list()
+downregulated_clusters_list <- list()
+all_condition_names <- c()
 
 # Set thresholds
 th.pv <- 1.3  # p-value threshold (log10 scale)
 th.fc <- 1.5  # fold change threshold
 
-# Loop through conditions, compute statistics, generate volcano plots, and extract up/downregulated clusters
+# Initialize letter index
+letter_index <- 1
+
+# Initialize list of volcano plot filenames
+volcano_plot_files <- c()
+
+# Define a function to generate sufficient letter labels
+get_letters <- function(n) {
+  if (n <= 26) {
+    return(LETTERS[1:n])
+  } else {
+    # Generate double-letter labels, e.g., AA, AB, ...
+    return(c(LETTERS, as.vector(outer(LETTERS, LETTERS, paste0)))[1:n])
+  }
+}
+
+letters_list <- get_letters(length(list.conditions))
+
+# Loop through each condition, compute statistics, generate volcano plots, and extract clusters
 for (i in seq_along(list.conditions)) {
   condition_name <- names(list.conditions)[i]
   all_condition_names <- c(all_condition_names, condition_name)
   
   # Compute statistics
-  DataCell <- computeStatistics(DataCell, 
-                                condition = list.conditions[[i]], 
-                                ref.condition = samples_baseline,
-                                comparison = paste0(condition_name, " vs. samples_baseline"), 
-                                test.statistics = "t.test",
-                                paired = FALSE)
+  DataCell <- computeStatistics(
+    DataCell, 
+    condition = list.conditions[[i]], 
+    ref.condition = samples_baseline,
+    comparison = paste0(condition_name, " vs. samples_baseline"), 
+    test.statistics = "t.test",
+    paired = FALSE
+  )
   
-  # Extract statistic result
+  # Extract statistical results
   stat_result <- DataCell@statistic
   
-  # Ensure fresh data by filtering only for the current comparison
-  stat_result <- stat_result[stat_result$comparison == paste0(condition_name, " vs. samples_baseline"), ]
+  # Filter results for the current comparison
+  comparison_label <- paste0(condition_name, " vs. samples_baseline")
+  stat_result <- stat_result[stat_result$comparison == comparison_label, ]
   
-  # Remove NA values before filtering
+  # Remove rows with NA values
   stat_result <- stat_result[!is.na(stat_result$lfc) & !is.na(stat_result$pvalue), ]
   
-  # Convert pvalue to -log10(pvalue) for comparison
+  # Convert p-value to -log10(p-value)
   stat_result$log_pvalue <- -log10(stat_result$pvalue)
   
-  # Accumulate the statistical results of this iteration
+  # Accumulate all statistical results
   all_stat_results <- rbind(all_stat_results, stat_result)
   
-  # Upregulated clusters (lfc > threshold and log10(pvalue) > threshold)
-  upregulated_clusters_list[[paste0(condition_name, "_vs_samples_baseline")]] <- stat_result[stat_result$lfc > th.fc & stat_result$log_pvalue > th.pv, ]$clusters
+  # Extract upregulated and downregulated clusters
+  upregulated_clusters <- stat_result$clusters[stat_result$lfc > th.fc & stat_result$log_pvalue > th.pv]
+  downregulated_clusters <- stat_result$clusters[stat_result$lfc < -th.fc & stat_result$log_pvalue > th.pv]
   
-  # Downregulated clusters (lfc < -threshold and log10(pvalue) > threshold)
-  downregulated_clusters_list[[paste0(condition_name, "_vs_samples_baseline")]] <- stat_result[stat_result$lfc < -th.fc & stat_result$log_pvalue > th.pv, ]$clusters
+  upregulated_clusters_list[[paste0(condition_name, "_vs_samples_baseline")]] <- upregulated_clusters
+  downregulated_clusters_list[[paste0(condition_name, "_vs_samples_baseline")]] <- downregulated_clusters
   
-  # Print the results
-  cat("\nUpregulated clusters in", paste0(condition_name, " vs. samples_baseline"), ":\n")
-  print(upregulated_clusters_list[[condition_name]])
+  # Print results
+  cat("\nUpregulated clusters in", comparison_label, ":\n")
+  print(upregulated_clusters)
   
-  cat("\nDownregulated clusters in", paste0(condition_name, " vs. samples_baseline"), ":\n")
-  print(downregulated_clusters_list[[condition_name]])
+  cat("\nDownregulated clusters in", comparison_label, ":\n")
+  print(downregulated_clusters)
   
   # Generate volcano plot
-  volcano_plot <- plotVolcano(DataCell,
-                              comparison = paste0(condition_name, " vs. samples_baseline"),
-                              th.pv = th.pv,
-                              th.fc = th.fc,
-                              plot.text = TRUE)
+  v <- plotVolcano(
+    DataCell,
+    comparison = comparison_label,
+    th.pv = th.pv,
+    th.fc = th.fc,
+    plot.text = TRUE
+  )
   
-  # Save plot
-  ggsave(filename = paste0("./03_figures/volcanoplots/volcanoplot_", condition_name, "_vs_samples_baseline.png"),
-         plot = volcano_plot, width = 10, height = 10)
+  # Get the current letter label
+  letter_label <- letters_list[letter_index]
+  
+  # Add the letter label to the plot
+  plot_with_label <- ggdraw() +
+    draw_plot(v, 0, 0, 1, 1) +  # Draw the volcano plot
+    draw_label(
+      label = letter_label,
+      x = 0.02,                 # 2% distance from the left edge
+      y = 0.98,                 # 98% distance from the bottom edge (5% distance from the top)
+      hjust = 0,                # Left-aligned
+      vjust = 1,                # Top-aligned
+      size = 20, 
+      fontface = "bold",
+      color = "black"
+    )
+  
+  # Construct the filename for saving
+  plot_filename <- paste0("volcanoplot_", condition_name, "_vs_samples_baseline.png")
+  
+  # Save the volcano plot with the letter label using png()
+  png(filename = file.path(output_dir, plot_filename),
+      width = 3000,       # Width: 3000 pixels
+      height = 3000,      # Height: 3000 pixels
+      units = "px",      # Units in pixels
+      res = 300,          # Resolution: 300 DPI
+      bg = "white")      # Background color: white
+  
+  # Draw the plot
+  print(plot_with_label)
+  
+  # Close the PNG device
+  dev.off()
+  
+  # Record the filename
+  volcano_plot_files <- c(volcano_plot_files, file.path(output_dir, plot_filename))
+  
+  # Increment the letter index
+  letter_index <- letter_index + 1
 }
+
+# Update DataCell with all statistical results
 DataCell@statistic <- all_stat_results
+
+# Combine all volcano plots into a single image
+# Read all saved PNG files and convert them into grobs
+grobs <- lapply(volcano_plot_files, function(f) {
+  img <- readPNG(f)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Define layout
+ncol_val <- 2
+nrow_val <- ceiling(length(grobs) / ncol_val)
+
+# Open a new PNG device to save the combined image
+collage_filename <- file.path(output_dir, "volcanoplots_collage.png")
+png(filename = collage_filename, width = 6000, height = 12000, units = "px", res = 300)
+
+# Arrange all grobs
+grid.arrange(grobs = grobs, ncol = ncol_val, nrow = nrow_val)
+
+# Close the PNG device
+dev.off()
 
 # Define significantly changed cluster lists for 8 conditions vs baseline
 upregulated_clusters_PP_vs_baseline <- list()
