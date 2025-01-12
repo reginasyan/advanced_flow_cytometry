@@ -83,8 +83,8 @@ for (marker in markers_of_interest) {
       x = -Inf,  # far right
       y = Inf,  # top
       label = LETTERS[index],
-      hjust = -0.1,   # shift left from right edge
-      vjust = 1.2,   # shift down from top
+      hjust = -0.1,
+      vjust = 1.2,
       size = 6,
       fontface = "bold"
     )
