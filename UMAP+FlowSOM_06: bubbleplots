@@ -1,5 +1,39 @@
 library(ggplot2)     
-library(dplyr)     
+library(dplyr)
+
+# Refine significantly changed cluster lists for 8 conditions vs baseline
+upregulated_clusters_PP_vs_baseline <- list()
+upregulated_clusters_PB_vs_baseline <- list()
+downregulated_clusters_PP_vs_baseline <- list()
+downregulated_clusters_PB_vs_baseline <- list()
+
+upregulated_clusters_PP_vs_baseline <- list(
+  PPD03 = upregulated_clusters_list$samples_PPD03_vs_samples_baseline,
+  PPD08 = upregulated_clusters_list$samples_PPD08_vs_samples_baseline,
+  PPD14 = upregulated_clusters_list$samples_PPD14_vs_samples_baseline,
+  PPD57 = upregulated_clusters_list$samples_PPD57_vs_samples_baseline
+)
+
+upregulated_clusters_PB_vs_baseline <- list(
+  PBD03 = upregulated_clusters_list$samples_PBD03_vs_samples_baseline,
+  PBD08 = upregulated_clusters_list$samples_PBD08_vs_samples_baseline,
+  PBD14 = upregulated_clusters_list$samples_PBD14_vs_samples_baseline,
+  PBD28 = upregulated_clusters_list$samples_PBD28_vs_samples_baseline
+)
+
+downregulated_clusters_PP_vs_baseline <- list(
+  PPD03 = downregulated_clusters_list$samples_PPD03_vs_samples_baseline,
+  PPD08 = downregulated_clusters_list$samples_PPD08_vs_samples_baseline,
+  PPD14 = downregulated_clusters_list$samples_PPD14_vs_samples_baseline,
+  PPD57 = downregulated_clusters_list$samples_PPD57_vs_samples_baseline
+)
+
+downregulated_clusters_PB_vs_baseline <- list(
+  PBD03 = downregulated_clusters_list$samples_PBD03_vs_samples_baseline,
+  PBD08 = downregulated_clusters_list$samples_PBD08_vs_samples_baseline,
+  PBD14 = downregulated_clusters_list$samples_PBD14_vs_samples_baseline,
+  PBD28 = downregulated_clusters_list$samples_PBD28_vs_samples_baseline
+)
 
 # Bubble plots
 # Create a general function for processing each situation and plotting bubble plots
