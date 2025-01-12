@@ -1,6 +1,17 @@
 library(ggplot2)
 library(eulerr)
 
+# Function to remove empty clusters
+remove_empty_clusters <- function(cluster_list) {
+  cluster_list[sapply(cluster_list, function(x) length(x) > 0)]
+}
+
+# Remove empty clusters
+upregulated_clusters_PP_vs_baseline <- remove_empty_clusters(upregulated_clusters_PP_vs_baseline)
+upregulated_clusters_PB_vs_baseline <- remove_empty_clusters(upregulated_clusters_PB_vs_baseline)
+downregulated_clusters_PP_vs_baseline <- remove_empty_clusters(downregulated_clusters_PP_vs_baseline)
+downregulated_clusters_PB_vs_baseline <- remove_empty_clusters(downregulated_clusters_PB_vs_baseline)
+
 # Function to create and save euler plots
 create_euler_plot <- function(cluster_list, plot_title, output_path) {
   png(output_path, width = 3000, height = 3000, res = 350)
