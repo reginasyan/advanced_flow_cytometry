@@ -210,14 +210,3 @@ downregulated_clusters_PB_vs_baseline <- list(
   PBD14 = downregulated_clusters_list$samples_PBD14_vs_samples_baseline,
   PBD28 = downregulated_clusters_list$samples_PBD28_vs_samples_baseline
 )
-
-# Function to remove empty clusters
-remove_empty_clusters <- function(cluster_list) {
-  cluster_list[sapply(cluster_list, function(x) length(x) > 0)]
-}
-
-# Remove empty clusters
-upregulated_clusters_PP_vs_baseline <- remove_empty_clusters(upregulated_clusters_PP_vs_baseline)
-upregulated_clusters_PB_vs_baseline <- remove_empty_clusters(upregulated_clusters_PB_vs_baseline)
-downregulated_clusters_PP_vs_baseline <- remove_empty_clusters(downregulated_clusters_PP_vs_baseline)
-downregulated_clusters_PB_vs_baseline <- remove_empty_clusters(downregulated_clusters_PB_vs_baseline)
